@@ -1,0 +1,12 @@
+parameters:
+	checkAlwaysTrueCheckTypeFunctionCall: false
+	checkAlwaysTrueInstanceof: false
+	polluteCatchScopeWithTryAssignments: false
+	polluteScopeWithLoopInitialAssignments: true
+	earlyTerminatingMethodCalls: []
+	universalObjectCratesClasses: []
+	ignoreErrors: []
+	tmpDir: %rootDir%/tmp
+	level: 5
+includes:
+	- vendor/phpstan/phpstan-strict-rules/rules.neon

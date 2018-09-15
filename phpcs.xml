@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<ruleset name="kirby3-plugin">
+
+  <!-- look here -->
+  <file>src</file>
+
+  <!-- check using this meta-cs -->
+  <rule ref="omz13-k3p"/>
+</ruleset>
