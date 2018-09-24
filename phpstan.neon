@@ -5,7 +5,11 @@ parameters:
 	polluteScopeWithLoopInitialAssignments: true
 	earlyTerminatingMethodCalls: []
 	universalObjectCratesClasses: []
-	ignoreErrors: []
+	ignoreErrors:
+	- '#Cannot call method [a-z]+\(\) on Kirby\\Cms\\Page\|null.#'
+	- '#array\|Kirby\\Cms\\Field#'
+	- '#Call to an undefined method Kirby\\Cms\\Page::[a-z]+\(\).#'
+	- '#Property [a-z0-9]+\\[a-zA-Z]+::\$[a-zA-Z]+ has no typehint specified.#'
 	tmpDir: %rootDir%/tmp
 	level: 5
 includes:
