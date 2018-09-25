@@ -43,6 +43,8 @@ For 1.0, the non-binding list of planned features and implementation notes are:
 - [ ] Linkblogs
 - [ ] Category Splitting
 - [ ] Configurable feed path
+- [ ] Source by collection
+- [ ] Sponsor inserts
 
 ### Installation
 
