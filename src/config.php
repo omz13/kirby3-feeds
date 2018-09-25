@@ -22,7 +22,7 @@ Kirby::plugin(
                 return new Kirby\Cms\Response( omz13\Feeds::getFeedAtom( $root, $dodebug ), 'application/atom+xml' );
             } else {
                 header( 'HTTP/1.0 503 Service Unavailable' );
-                echo 'The ATOM-based syndication feed for this site is currently not available; sorry.';
+                echo 'This ATOM-based syndication feed is unavailable; sorry.';
                 die;
             }
           },
@@ -37,7 +37,7 @@ Kirby::plugin(
                 return new Kirby\Cms\Response( omz13\Feeds::getFeedRss( $root, $dodebug ), 'application/rss+xml' );
             } else {
                 header( 'HTTP/1.0 503 Service Unavailable' );
-                echo 'The RSS-based syndication feed for this site is current not available; sorry.';
+                echo 'This RSS-based syndication feed is unavailable; sorry.';
                 die;
             }
           },
@@ -53,7 +53,7 @@ Kirby::plugin(
                 return new Kirby\Cms\Response( omz13\Feeds::getFeedJson( $root, $dodebug ), 'application/json' );
             } else {
                 header( 'HTTP/1.0 503 Service Unavailable' );
-                echo 'The JSON-based syndication feed for this site is not available; sorry.';
+                echo 'This JSON-based syndication feed is unavailable; sorry.';
                 die;
             }
           },
