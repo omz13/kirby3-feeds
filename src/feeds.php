@@ -8,6 +8,7 @@ namespace omz13;
 
 use Kirby\Cms\Page;
 use Kirby\Cms\Pages;
+use Kirby\Exception\NotFoundException;
 use Kirby\Toolkit\Xml;
 use League\HTMLToMarkdown\HtmlConverter;
 
@@ -29,6 +30,7 @@ use function md5;
 use function microtime;
 use function strtotime;
 use function time;
+use function ucwords;
 
 define( 'FEEDS_VERSION', '0.0.0' );
 define( 'FEEDS_CONFIGURATION_PREFIX', 'omz13.feeds' );
@@ -40,7 +42,6 @@ define( 'FEEDS_CONFIGURATION_PREFIX', 'omz13.feeds' );
 class Feeds
 {
   private static $debug;
-  private static $optionCACHE; // cache TTL in *minutes*; if zero or null, no cache
 
   public static function version() : string {
     return FEEDS_VERSION;
@@ -96,37 +97,31 @@ class Feeds
     return "";
   }//end getConfigurationForKey()
 
-  private static function pickupOptions() : void {
-    static::$optionCACHE = static::getConfigurationForKey( 'cacheTTL' );
-//    static::$optionIPWTI = static::getArrayConfigurationForKey( 'includePageWhenTemplateIs' );
-//    static::$optionXCWTI = static::getArrayConfigurationForKey( 'excludeChildrenWhenTemplateIs' );
-//    static::$optionSPWTI = static::getArrayConfigurationForKey( 'skipPageWhenTemplateIs' );
-  }//end pickupOptions()
+/*
+  private static function getFeedWhateverByRoot( string $what, callable $generator, string $root = "", bool $debug = false ) : string {
+  $p = kirby()->site()->page( $root = "" ? static::getConfigurationForKey( 'root' ) : $root )->children()->visible(); // ->flip()->limit(10)
+  if ( $p->count() == 0 ) {
+      return "oops";
+  }
+*/
 
-  /**
-  * @SuppressWarnings(PHPMD.CyclomaticComplexity)
-   */
-  private static function getFeedWhatever( string $what, callable $generator, string $root, bool $debug ) : string {
-    if ( $root == null ) {
-      $p = kirby()->site()->page( 'blog' )->children()->visible(); // ->flip()->limit(10)
-      if ( $p->count() == 0 ) {
-        return "oops";
-      }
-    } else {
-      $p = kirby()->site()->page( $root )->children()->visible(); // ->flip()->limit(10)
-    }
+/**
+* @SuppressWarnings(PHPMD.CyclomaticComplexity)
+*/
+  public static function getFeedWhatever( string $what, string $collectionName, bool $firehose, ?Pages $pp, bool $debug = false ) : ?string {
+    $generator = [ self::class, 'generateFeed' . ucwords( $what ) ];
 
     $tbeg = microtime( true );
 
     // echo "<!-- Getting " . $what . " for " . json_encode( $root ) . "-->\n";
 
-    static::$optionCACHE = static::getConfigurationForKey( 'cacheTTL' );
+    $cacheTTL = static::getConfigurationForKey( 'cacheTTL' );
 
     static::$debug = $debug && kirby()->option( 'debug' ) !== null && kirby()->option( 'debug' ) == true;
 
     // if cacheTTL disabled...
-    if ( static::$optionCACHE == "" || static::$optionCACHE == "0" || static::$optionCACHE == false ) {
-      $r = static::generateFeedWhatever( $generator, $p, $debug );
+    if ( $cacheTTL == "" || $cacheTTL == "0" || $cacheTTL == false ) {
+      $r = static::generateFeedWhatever( $generator, $collectionName, $firehose, $pp, $debug );
       if ( static::$debug == true ) {
         $r .= "<!-- Freshly generated; not cached for reuse -->\n";
       }
@@ -135,17 +130,21 @@ class Feeds
       $cacheCache = kirby()->cache( FEEDS_CONFIGURATION_PREFIX );
 
       // build list of options
-      $ops  = json_encode( $root );
+      $ops  = json_encode( $firehose );
+      $ops .= '-' . json_encode( $collectionName );
       $ops .= '-' . json_encode( $debug );
+      if ( $pp != null ) {
+        $ops .= '-' . json_encode( $pp->count() );
+      }
 
-      $cacheName = FEEDS_VERSION . '-' . $what . '-' . md5( $ops );
+      $cacheName = FEEDS_VERSION . '-' . ( $firehose == true ? "" : $collectionName . "-" ) . $what . "-" . md5( $ops );
 
       $r = $cacheCache->get( $cacheName );
       if ( $r == null ) {
-        $r = static::generateFeedWhatever( $generator, $p, $debug );
-        $cacheCache->set( $cacheName, $r, static::$optionCACHE );
+        $r = static::generateFeedWhatever( $generator, $collectionName, $firehose, $pp, $debug );
+        $cacheCache->set( $cacheName, $r, $cacheTTL );
         if ( static::$debug == true ) {
-          $r .= '<!-- Freshly generated; cached into ' . $cacheName . ' for ' . static::$optionCACHE . " minute(s) for reuse -->\n";
+          $r .= '<!-- Freshly generated; cached into ' . $cacheName . ' for ' . $cacheTTL . " minute(s) for reuse -->\n";
         }
       } else {
         if ( static::$debug == true ) {
@@ -166,28 +165,33 @@ class Feeds
     return $r;
   }//end getFeedWhatever()
 
-  // G E T - F E E D
-
-  public static function getFeedAtom( string $root, bool $debug = false ) : string {
-    return static::getFeedWhatever( 'atom', [ self::class, 'generateFeedAtom'] , $root, $debug );
-  }//end getFeedAtom()
-
-  public static function getFeedJson( string $root, bool $debug = false ) : string {
-    return static::getFeedWhatever( 'json', [ self::class, 'generateFeedJson'] , $root, $debug );
-  }//end getFeedJson()
-
-  public static function getFeedRss( string $root, bool $debug = false ) : string {
-    return static::getFeedWhatever( 'rss', [ self::class, 'generateFeedRss'] , $root, $debug );
-  }//end getFeedRss()
-
   // G E N E R A T E - F E E D
 
-  private static function generateFeedWhatever( callable $feedPagesRunner, Pages $p, bool $debug = false ) : string {
-    static::pickupOptions();
+  private static function generateFeedWhatever( callable $feedPagesRunner, string $collectionName, bool $firehose, ?Pages $pp, bool $debug = false ) : ?string {
+    if ( $pp == null ) {
+      try {
+        $pp = kirby()->collection( $collectionName );
+        if ( $pp == null ) {
+          return null;
+        }
+      } catch ( NotFoundException $e ) {
+        return null;
+      }
+    }
 
     $tbeg = microtime( true );
 
-    $r = $feedPagesRunner( $p, $debug );
+    $feedTitle = kirby()->site()->content()->get( 'title' );
+    if ( $collectionName != null ) {
+      // not firehose, so:
+      $feedTitle .= ' - ' . ucwords( $collectionName );
+    }
+
+    if ( $debug == true ) {
+      $feedTitle .= ' - ' . ucwords( $feedPagesRunner[1] ); // append runner  name
+    }
+
+    $r = $feedPagesRunner( $pp, ( $firehose == false ? $collectionName : null ) , $feedTitle, $debug );
 
     $tend = microtime( true );
     if ( $debug == true ) {
@@ -200,28 +204,28 @@ class Feeds
     return $r;
   }//end generateFeedWhatever()
 
-  private static function generateFeedAtom( Pages $p, bool $debug ) : string {
+  private static function generateFeedAtom( Pages $p, ?string $collectionName, string $feedTitle, bool $debug ) : string {
     $tnow = microtime( true );
+
+    $feedme = kirby()->site()->url() . "/feedme/" . ( $collectionName != null ? $collectionName . "/" : "" ) . "atom";
 
     $r  = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n";
     $r .= "<feed xmlns=\"http://www.w3.org/2005/Atom\">\n";
 
-    if ( $debug ) {
-      $r .= "  <title>ATOM " . kirby()->site()->content()->get( 'title' ) . "</title>\n";
-    } else {
-      $r .= "  <title>" . kirby()->site()->content()->get( 'title' ) . "</title>\n";
-    }
+    $r .= "  <title>" . $feedTitle . "</title>\n";
 
     $r .= "  <subtitle>" . kirby()->site()->content()->get( 'description' ) . "</subtitle>\n";
 
-//  $r .= "    <link href=\"" . kirby()->site()->url() . "/feeds/atom\" rel=\"self\" type=\"application/atom+xml\" />\n";
-    $r .= "  <link href=\"" . kirby()->site()->url() . "/feeds/atom.xml\" rel=\"self\" type=\"application/atom+xml\" />\n";
+    if ( $collectionName != null ) {
+      $r .= "  <category term=\" . $collectionName . \" />\n";
+    }
+
+    $r .= "  <link href=\"" . $feedme . "\" rel=\"self\" type=\"application/atom+xml\" />\n";
     $r .= "  <link href=\"" . kirby()->site()->url() . "/\" rel=\"alternate\" type=\"text/html\" />\n";
-    $r .= "  <id>" . kirby()->site()->url() . "/feeds/atom.xml</id>\n";
+    $r .= "  <id>" . $feedme . "</id>\n";
     $r .= "  <updated>" . date( 'Y-m-d\TH:i:s', (int) $tnow ) . "Z</updated>\n";
     $r .= "  <rights>" . kirby()->site()->content()->get( 'copyright' ) . "</rights>\n";
-
-    $r .= "  <generator>Blood, Sweat, and Tears</generator>\n";
+    $r .= "  <generator uri=\"https://github.com/omz13/\">omz13/feeds</generator>\n";
 
     static::addPagesToFeedWhatever( $p, $r, [ self::class, 'addPageToAtomFeed' ] );
     $r .= "</feed>\n";
@@ -230,19 +234,15 @@ class Feeds
     return $r;
   }//end generateFeedAtom()
 
-  private static function generateFeedJson( Pages $p, bool $debug ) : string {
+  private static function generateFeedJson( Pages $p, ?string $collectionName, string $feedTitle, bool $debug ) : string {
     $r = "{\n";
 
     $r .= "\"version\": \"https://jsonfeed.org/version/1\",\n";
-    $r .= "\"user_comment\": \"This feed allows you to read the posts from this site in any feed reader that supports the JSON Feed format. To add this feed to your reader, copy the following URL — " . kirby()->site()->url() . "/feeds/feed.json — and add it your reader.\",\n";
-    if ( $debug ) {
-      $r .= "\"title\": \"JSON " . kirby()->site()->content()->get( 'title' ) . "\",\n";
-    } else {
-      $r .= "\"title\": \"" . kirby()->site()->content()->get( 'title' ) . "\",\n";
-    }
+    $r .= "\"user_comment\": \"This feed allows you to read the posts from this site in any feed reader that supports the JSON Feed format. To add this feed to your reader, copy the following URL — " . kirby()->site()->url() . "/feedme/feed.json — and add it your reader.\",\n";
+    $r .= "\"title\": \"" . $feedTitle . "\",\n";
 
     $r .= "\"home_page_url\": \"" . kirby()->site()->url() . "\",\n";
-    $r .= "\"feed_url\": \"" . kirby()->site()->url() . "/feeds/feed.json\",\n";
+    $r .= "\"feed_url\": \"" . kirby()->site()->url() . "/feedme/" . ( $collectionName != null ? $collectionName . "/" : "" ) . "json\",\n";
 
     $r .= "\"items\": [\n";
 
@@ -254,29 +254,25 @@ class Feeds
     return $r;
   }//end generateFeedJson()
 
-  private static function generateFeedRss( Pages $p, bool $debug ) : string {
+  private static function generateFeedRss( Pages $p, ?string $collectionName, string $feedTitle, bool $debug ) : string {
     $tnow = microtime( true );
 
     $r  = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n";
     $r .= "<rss version=\"2.0\" xmlns:atom=\"http://www.w3.org/2005/Atom\">\n";
 
     $r .= "  <channel>\n";
-    $r .= "  <atom:link href=\"" . kirby()->site()->url() . "/feeds/rss.xml\" rel=\"self\" type=\"application/rss+xml\" />\n";
-    if ( $debug ) {
-      $r .= "    <title>RSS " . kirby()->site()->content()->get( 'title' ) . "</title>\n";
-    } else {
-      $r .= "    <title>" . kirby()->site()->content()->get( 'title' ) . "</title>\n";
-    }
+    $r .= "  <atom:link href=\"" . kirby()->site()->url() . "/feedme/" . ( $collectionName != null ? $collectionName . "/" : "" ) . "rss\" rel=\"self\" type=\"application/rss+xml\" />\n";
+    $r .= "    <title>" . $feedTitle . "</title>\n";
     $r .= "    <link>" . kirby()->site()->url() . "/</link>\n";
     $r .= "    <description>" . kirby()->site()->content()->get( 'description' ) . "</description>\n";
 //    $r .= "    <language>" . kirby()->site()->language() . "</language>\n";
     $r .= "    <copyright>" . kirby()->site()->content()->get( 'copyright' ) . "</copyright>\n";
     $r .= "    <lastBuildDate>" . date( DATE_RSS, (int) $tnow ) . "</lastBuildDate>\n";
 
-    if ( static::$optionCACHE != 0 ) {
-      $r .= "    <ttl>" . static::$optionCACHE . "</ttl>\n";
-    } else {
-      $r .= "    <ttl>60</ttl>\n";
+    $ttl = static::getConfigurationForKey( 'cacheTTL' );
+
+    if ( $ttl != 0 ) {
+      $r .= "    <ttl>" . $ttl . "</ttl>\n";
     }
 
     // static::addPagesToRssFeed( $p, $r );
@@ -299,71 +295,51 @@ class Feeds
     $numPage = $sortedpages->count();
 
     foreach ( $sortedpages as $p ) {
-      static::addComment( $r, 'crunching ' . $p->url() . ' [it=' . $p->intendedTemplate() . '] [s=' . $p->status() . '] [d=' . $p->depth() . ']' );
-
-      if ( $p->hasMethod( 'issunset' ) ) {
-        if ( $p->issunset() ) {
-          static::addComment( $r, 'excluding ' . $p->url() . ' because isSunset' );
-          continue;
-        }
-      }
-
-      // exclude because, if supported,  the page is under embargo
-      if ( $p->hasMethod( 'isunderembargo' ) ) {
-        if ( $p->isunderembargo() ) {
-          static::addComment( $r, 'excluding ' . $p->url() . ' because isUnderembargo' );
-          continue;
-        }
-      }
-
-      // exclude because page content field 'excludefromfeeds':
-      if ( $p->content()->get( 'excludefromfeeds' ) == 'true' ) {
-        static::addComment( $r, 'excluding ' . $p->url() . ' because excludefromfeeds' );
-        continue;
-      }
+      // static::addComment( $r, 'crunching ' . $p->url() . ' [it=' . $p->intendedTemplate() . '] [s=' . $p->status() . '] [d=' . $p->depth() . ']' );
 
       // calculate lastmod
-      $modat = 0; // default to unix epoch (jan-1-1970)
+      $whenMod = 0; // default to unix epoch (jan-1-1970)
       if ( $p->content()->has( 'updatedat' ) ) {
-        $t     = $p->content()->get( 'updatedat' );
-        $modat = strtotime( $t );
+        $t       = $p->content()->get( 'updatedat' );
+        $whenMod = strtotime( $t );
       } else {
         if ( $p->content()->has( 'date' ) ) {
-          $t     = $p->content()->get( 'date' );
-          $modat = strtotime( $t );
+          $t       = $p->content()->get( 'date' );
+          $whenMod = strtotime( $t );
         } else {
           if ( file_exists( $p->contentFile() ) ) {
-            $modat = filemtime( $p->contentFile() );
+            $whenMod = filemtime( $p->contentFile() );
           }
         }
       }//end if
 
-      if ( $modat == false ) {
-        $modat = 0;
+      if ( $whenMod == false ) {
+        $whenMod = 0;
       }
 
-      $pubat = 0;
+      $whenPub = 0; // $p->date()
 
       if ( $p->content()->has( 'date' ) ) {
-        $t     = $p->content()->get( 'date' );
-        $pubat = strtotime( $t );
-      }
-      if ( $pubat == false ) {
-        $pubat = $modat;
+        $t       = $p->content()->get( 'date' );
+        $whenPub = strtotime( $t );
       }
 
+      if ( $whenPub == false ) {
+        $whenPub = $whenMod;
+      }
+
+      $runner( $p, $whenPub, $whenMod, $r, ( $numPage == 1 ? true : false ) );
       $numPage -= 1;
-      $runner( $p, $modat, $r, ( $numPage == 1 ? true : false ) );
     }//end foreach
   }//end addPagesToFeedWhatever()
 
-  private static function addPageToAtomFeed( Page $p, int $lastmod, string &$r, ?bool $isLastPage = false ) : void {
+  private static function addPageToAtomFeed( Page $p, int $whenPub, int $whenMod, string &$r, ?bool $isLastPage = false ) : void {
     $r .= "  <entry>\n";
     $r .= '    <title>' . $p->content()->get( 'title' ) . "</title>\n";
     $r .= "    <id>" . $p->url() . "</id>\n";
 
-    $r .= '    <updated>' . date( 'Y-m-d\TH:i:s', $lastmod ) . "Z</updated>\n";
-    $r .= '    <published>' . date( 'Y-m-d\TH:i:s' , $lastmod ) . "Z</published>\n";
+    $r .= '    <updated>' . date( 'Y-m-d\TH:i:s', $whenMod ) . "Z</updated>\n";
+    $r .= '    <published>' . date( 'Y-m-d\TH:i:s' , $whenPub ) . "Z</published>\n";
 
     $r .= "    <link href=\"" . $p->url() . "\" />\n";
     $r .= "    <content type=\"html\" xml:lang=\"en\" xml:base=\"" . kirby()->site()->url() . "/\">\n<![CDATA[";
@@ -376,7 +352,7 @@ class Feeds
     $r .= "  </entry>\n";
   }//end addPageToAtomFeed()
 
-  private static function addPageToJsonFeed( Page $p, int $lastmod, string &$r, ?bool $isLastPage = false ) : void {
+  private static function addPageToJsonFeed( Page $p, int $whenPub, int $whenMod, string &$r, ?bool $isLastPage = false ) : void {
 
     // $converter = new HtmlConverter( [ 'remove_nodes' => 'aardvark' ] );
     $converter = new HtmlConverter;
@@ -390,8 +366,8 @@ class Feeds
           'title'          => $p->content()->get( 'title' )->value(),
           'content_html'   => $html,
           'content_text'   => $markdown,
-          'date_published' => date( DATE_ATOM, (int) $p->date()->value() ),
-          'date_modified'  => date( DATE_ATOM, $lastmod ),
+          'date_published' => date( DATE_ATOM, $whenPub ),
+          'date_modified'  => date( DATE_ATOM, $whenMod ),
         ],
         JSON_UNESCAPED_SLASHES
     );
@@ -403,7 +379,7 @@ class Feeds
     }
   }//end addPageToJsonFeed()
 
-  private static function addPageToRssFeed( Page $p, int $lastmod, string &$r, ?bool $isLastPage = false ) : void {
+  private static function addPageToRssFeed( Page $p, int $whenPub, int $whenMod, string &$r, ?bool $isLastPage = false ) : void {
     $r .= "  <item>\n";
     $r .= "    <title>" . $p->content()->get( 'title' ) . "</title>\n";
     $r .= "    <link>" . $p->url() . "</link>\n";
@@ -419,7 +395,7 @@ class Feeds
     // category
     // enclosure
     $r .= "    <guid isPermaLink=\"true\">" . $p->url() . "</guid>\n";
-    $r .= "    <pubDate>" . date( DATE_RSS, $lastmod ) . "</pubDate>\n";
+    $r .= "    <pubDate>" . date( DATE_RSS, $whenMod ) . "</pubDate>\n";
 
     $r .= "  </item>\n";
   }//end addPageToRssFeed()
@@ -429,6 +405,12 @@ class Feeds
       $r .= '<!-- ' . $m . " -->\n";
     }
   }//end addComment()
+
+  private static function addCommentJson( string &$r, string $m ) : void {
+    if ( static::$debug == true ) {
+      $r .= '\"_comment\": \"' . $m . "\"\n";
+    }
+  }//end addCommentJson()
 
   public function getNameOfClass() : string {
     return static::class;
