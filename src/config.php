@@ -43,18 +43,21 @@ Kirby::plugin(
 
             $category = strtolower( $category );
 
-            $availableCats = omz13\Feeds::getArrayConfigurationForKey( 'categories' );
-            if ( $availableCats == null ) {
-              header( 'HTTP/1.0 404' );
-              echo 'Feed for \'' . $category . '\' is not available; request the firehose: /feeds/atom, /feeds/json, or /feeds/rss';
-              die;
-            }
-            assert( $category != "" );
-            if ( in_array( $category, $availableCats, true ) == false ) {
-              header( 'HTTP/1.0 404' );
-              echo 'The syndication category feed \'' . $category . '\' does not exist; sorry.';
-              die;
-            }
+            if ( $firehose == false ) {
+              $availableCats = omz13\Feeds::getArrayConfigurationForKey( 'categories' );
+
+              if ( $availableCats == null ) {
+                header( 'HTTP/1.0 500' );
+                echo 'Feed for \'' . $category . '\' is not available; request the firehose: /feeds/atom, /feeds/json, or /feeds/rss';
+                die;
+              }
+              assert( $category != "" );
+              if ( in_array( $category, $availableCats, true ) == false ) {
+                header( 'HTTP/1.0 404' );
+                echo 'The syndication category feed \'' . $category . '\' does not exist; sorry.';
+                die;
+              }
+            }//end if
 
             $collection = null;
             try {
