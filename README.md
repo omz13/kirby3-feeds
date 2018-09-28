@@ -10,16 +10,20 @@
 
 For a kirby3 site, this plugin (_omz13/feeds_)  generates syndication feeds in RSS, ATOM, and JSON formats.
 
-- Generates feeds based on a Kirby3 `collection`.
+- Generates syndication feeds based on a Kirby3 `collection`.
 - Generates a [RSS 2.0](https://validator.w3.org/feed/docs/rss2.html) syndication feed (at `/feeds/rss`).
 - Generates an [ATOM](https://validator.w3.org/feed/docs/atom.html) syndication feed (at `/feeds/atom`).
 - Generates a [JSON 1](https://jsonfeed.org/version/1) syndication feed (at `/feeds/json`).
-- Generates a sub-setted syndication feed (at `feeds/<category>/atom|json|rss).
+- Generates a sub-setted syndication feed at `feeds/<category>/atom|json|rss`) where `<category>`` is mapped to a kirby `collection`.
+- A feed will have a maximum of 60 items.
 - The generated syndication feeds can be cached for a determined amount of time, c.f. `cacheTTL` in _Configuration_.
 - Only pages that have a status of "published" are included, i.e. those with "draft" or "unpublished" are excluded.
-- Withdrawn pages (i.e. with a method `issunset` that returns `true`) are excluded.
-- Pages under an embargo (i.e. with a method `isunderembargo` that returns `true`) are excluded.
 - For debugging purposes, the generated sitemap can include additional information as comments; c.f. `debugqueryvalue` in _Configuration_.
+
+Caveat:
+- Withdrawn pages (i.e. with a method `issunset` that returns `true`) can be excluded by appropriate configuration within a collection
+- Pages under an embargo (i.e. with a method `isunderembargo` that returns `true`) can similarly be managed.
+
 
 ### Client Support
 
@@ -93,9 +97,13 @@ If your project itself is under git, then you need to add the plugin as a submod
 
 ### Configuration
 
-The following mechanisms can be used to modify the plugin's behaviour.
+There are three aspets that need configuration:
 
-#### via `config.php`
+- `config.php`
+- Feed discovery
+- Collections
+
+#### `config.php`
 
 In your site's `site/config/config.php` the following entries prefixed with `omz13.feeds.` can be used:
 
@@ -116,6 +124,31 @@ In `site/snippets/header.php` - or equivalent - you will need to add the followi
 <link rel="alternate" type="application/rss+xml"  title="Subscribe to RSS feed"  href="/feeds/rss.xml" />
 ```
 
+At the very least these should be added to the site's home page, and usually to all pages in a collection that is syndicated.
+
+Note that Atom, in particular, may not work if this is not done; Json and RSS are a little more forging but, as always, YMMV.
+
+#### Collections
+
+For the default (firehose) syndication feed, you need to ensure that you have a collection and have configured it. Typically this would be an 'articles' collection, and an example would be:
+
+```php
+<?php
+
+return function ($site) {
+    return $site->find('blog')->children()->listed()->flip();
+};
+```
+
+If using [omz13/suncyclepages](https://github.com/omz13/kirby3-suncyclepages) for embargo and withdraw, this would then be:
+
+```php
+<?php
+
+return function ($site) {
+	    return $site->find('blog')->children()->listed()->isunderembargo(false)->issunset(false)->flip();
+};
+```
 
 ### Use
 
@@ -126,7 +159,7 @@ For example, for the [Kirby Starter Kit](https://github.com/k-next/starterkit), 
 
 return [
   'omz13.feeds.cacheTTL' => 60,
-  'omz13.feeds.root' => [ 'blog '],
+  'omz13.feeds.firehose' => [ 'articles'],
   ],
 ];
 ```
@@ -139,7 +172,7 @@ _For experimental purposes this plugin implements a single-level pseudo-namespac
 return [
   'omz13.feeds' => [
     'cacheTTL' => 60,
-    'root' => [ 'blog' ],
+    'firehose' => [ 'articles' ],
   ],
 ];
 ```
