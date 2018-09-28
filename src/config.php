@@ -10,34 +10,46 @@ Kirby::plugin(
         'debugqueryvalue' => '42',  // guess!
         'cacheTTL'        => 10,    // time to cache generated feed, in MINUTES
         'firehose'        => 'articles',  // the collection to use for the firehose feed, i.e. /feed/whatever
-        'categories'      => [], // [ 'articles', 'embargo', 'projects' ],
+        'categories'      => ['projects'],          // list of collections to use for /feed/<category>/whatever, if empty, disabled
       ],
 
       'routes'  => [
         [
           'pattern' => [
-            'feedme/(:any)/(:any)',
-            'feedme/(:any)',
+            '(:any)/feed/(:any)', // <category> / "feed" / whatever     = category in format whatever
+            'feed/(:any)/(:any)', // "feed" / <category> / <whatever>   = category in format whatever
+            'feed/(:any)',        // "feed" / <whatever>                = firehose in format whatever
+    //      '(:any)/([r][s][s])', // <category> / <whatever>
           ],
-          'action'  => function ( $category = "", $whatever = "" ) {
+          'action'  => function ( $pa = "", $pb = "" ) {
             if ( omz13\Feeds::isEnabled() == false ) {
               header( 'HTTP/1.0 503 Service Unavailable' );
-              echo 'The syndication feed is unavailable; sorry.';
+              echo 'Syndication feed is unavailable; sorry.';
               die;
             }
 
-            if ( $whatever == "" ) {
-              // feedme/(:any) -> feedme/<firehose>/(:any)
-              $whatever = strtolower( $category );
-              $category = omz13\Feeds::getConfigurationForKey( 'firehose' );
-              $firehose = true;
+            if ( $pa == "feed" && $pb != "" ) {
+                // '(:any)/feed/(:any)' = <category> / "feed" / whatever = category in format whatever
+                $firehose = false;
+                $category = $pa;
+                $whatever = $pb;
             } else {
-              $firehose = false;
-            }
+              if ( $pb == "" ) {
+                // 'feed/(:any)' = "feed" / <whatever> = firehose in format whatever
+                $whatever = strtolower( $pa );
+                $category = omz13\Feeds::getConfigurationForKey( 'firehose' );
+                $firehose = true;
+              } else {
+                // 'feed/(:any)/(:any)', // "feed" / <category> / <whatever>   = category in format whatever
+                $category = $pa;
+                $whatever = $pb;
+                $firehose = false;
+              }
+            }//end if
 
-            if ( in_array( strtolower( $whatever ), [ 'atom', 'json', 'rss' ], false ) == false ) {
+            if ( in_array( strtolower( $whatever ), [ 'atom', 'json', 'rss' ], true ) == false ) {
               header( 'HTTP/1.0 404' );
-              echo 'Feed ' . $whatever . ' is invalid; request /feeds/atom, /feeds/json, or /feeds/rss';
+              echo 'Feed type ' . $whatever . ' is invalid; atom, json, or rss required.';
               die;
             }
 
@@ -47,43 +59,64 @@ Kirby::plugin(
               $availableCats = omz13\Feeds::getArrayConfigurationForKey( 'categories' );
 
               if ( $availableCats == null ) {
-                header( 'HTTP/1.0 500' );
-                echo 'Feed for \'' . $category . '\' is not available; request the firehose: /feeds/atom, /feeds/json, or /feeds/rss';
+                header( 'HTTP/1.0 404' );
+                echo 'Category-based syndication feeds are not available';
                 die;
               }
               assert( $category != "" );
               if ( in_array( $category, $availableCats, true ) == false ) {
                 header( 'HTTP/1.0 404' );
-                echo 'The syndication category feed \'' . $category . '\' does not exist; sorry.';
+                echo 'A syndication feed for category \'' . $category . '\' does not exist; sorry.';
                 die;
               }
             }//end if
 
-            $collection = null;
-            try {
-              $collection = kirby()->collection( $category );
-            } catch ( Kirby\Exception\NotFoundException $e ) {
-              $collection = null;
-            }
-            if ( $collection == null ) {
+            if ( kirby()->collections()->has( $category ) == false ) {
               header( 'HTTP/1.0 500' );
               echo 'Oops. A collection for syndication category feed \'' . $category . '\' was not found.';
               die;
             }
 
+            $h = kirby()->request()->headers();
+            if ( array_key_exists( "If-None-Match", $h ) ) {
+              header( 'HTTP/1.0 304' );
+              $eTag = $h['If-None-Match'];
+            } else {
+              $eTag = "";
+            }
+
+            if ( array_key_exists( "If-Modified-Since", $h ) ) {
+              $lastMod = strtotime( $h['If-Modified-Since'] );
+              if ( $lastMod == null ) {
+                $lastMod = 0;
+              }
+            } else {
+              $lastMod = 0;
+            }
+
             $dodebug = omz13\Feeds::getConfigurationForKey( 'debugqueryvalue' ) == get( 'debug' );
-            $r       = omz13\Feeds::getFeedWhatever( $whatever, $category, $firehose, $collection, $dodebug );
+            $r       = omz13\Feeds::getFeedWhatever( $whatever, $category, $firehose, $lastMod, $eTag, $dodebug );
             if ( $r != null ) {
               $mime = [
                 'atom' => 'application/atom+xml',
                 'json' => 'application/json',
                 'rss'  => 'application/rss+xml',
               ];
+              if ( $lastMod != 0 ) {
+                header( 'last-modified: ' . date( DATE_RSS, $lastMod ) );
+              }
+              if ( $eTag != "" ) {
+                header( 'etag: ' . $eTag );
+              }
               return new Kirby\Cms\Response( $r , $mime[$whatever] );
             } else {
-              header( 'HTTP/1.0 404 Not Found' );
+              if ( $eTag != "" || $lastMod != 0 ) {
+                header( 'HTTP/1.0 304' );
+              } else {
+                header( 'HTTP/1.0 404 Not Found' );
+              }
               die;
-            }
+            }//end if
           },
         ],
       ],
