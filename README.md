@@ -16,12 +16,13 @@ For a kirby3 site, this plugin (_omz13/feeds_)  generates syndication feeds in R
 - Generates a [JSON 1](https://jsonfeed.org/version/1) syndication feed (at `/feeds/json`).
 - Generates a sub-setted syndication feed at `feeds/<category>/atom|json|rss`) where `<category>`` is mapped to a kirby `collection`.
 - A feed will have a maximum of 60 items.
-- The generated syndication feeds can be cached for a determined amount of time, c.f. `cacheTTL` in _Configuration_.
+- The generated syndication feeds are cached in the server for a determined amount of time, c.f. `cacheTTL` in _Configuration_, to mitigate server load.
 - Only pages that have a status of "published" are included, i.e. those with "draft" or "unpublished" are excluded.
+- Respects `If-Modified-Since` and  `If-None-Match` headers and will return a `304 Not Modified` response if appropriate.
 - For debugging purposes, the generated sitemap can include additional information as comments; c.f. `debugqueryvalue` in _Configuration_.
 
 Caveat:
-- Withdrawn pages (i.e. with a method `issunset` that returns `true`) can be excluded by appropriate configuration within a collection
+- Withdrawn pages (i.e. with a method `issunset` that returns `true`) can be excluded by appropriate configuration within a collection.
 - Pages under an embargo (i.e. with a method `isunderembargo` that returns `true`) can similarly be managed.
 
 
@@ -40,7 +41,6 @@ In terms of iOS:
 - ReederApp - see OS X
 - Readkit - see OS X
 - [NewsExplorer]() - supoorts all three formats
-
 
 In terms of generic services/clients:
 - [FeedBin](https://feedbin.com/)
@@ -67,7 +67,7 @@ For 1.0, the non-binding list of planned features and implementation notes are:
 - [ ] Splitting
 - [x] Source by collection
 - [ ] Languages
-
+- [ ] Generate feed discovery headers
 
 ### Installation
 
@@ -119,9 +119,9 @@ In your site's `site/config/config.php` the following entries prefixed with `omz
 In `site/snippets/header.php` - or equivalent - you will need to add the following if you want automatic feed discovery to work:
 
 ```php
-<link rel="alternate" type="application/atom+xml" title="Subscribe to ATOM feed" href="/feeds/atom.xml" />
-<link rel="alternate" type="application/json"     title="Subscribe to JSON feed" href="/feeds/feed.json" />
-<link rel="alternate" type="application/rss+xml"  title="Subscribe to RSS feed"  href="/feeds/rss.xml" />
+<link rel="alternate" type="application/atom+xml" title="Subscribe to ATOM feed" href="/feed/atom.xml" />
+<link rel="alternate" type="application/json"     title="Subscribe to JSON feed" href="/feed/feed.json" />
+<link rel="alternate" type="application/rss+xml"  title="Subscribe to RSS feed"  href="/feed/rss.xml" />
 ```
 
 At the very least these should be added to the site's home page, and usually to all pages in a collection that is syndicated.

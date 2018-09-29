@@ -5,12 +5,12 @@ Kirby::plugin(
     [
       'root'    => dirname( __FILE__, 2 ),
       'options' => [
-        'cache'           => true,  // enable plugin cache facility
-        'disable'         => false, // if true, 503 any requests
-        'debugqueryvalue' => '42',  // guess!
-        'cacheTTL'        => 10,    // time to cache generated feed, in MINUTES
-        'firehose'        => 'articles',  // the collection to use for the firehose feed, i.e. /feed/whatever
-        'categories'      => ['projects'],          // list of collections to use for /feed/<category>/whatever, if empty, disabled
+        'cache'           => true,          // enable plugin cache facility
+        'disable'         => false,         // if true, 503 any requests
+        'debugqueryvalue' => '42',          // guess!
+        'cacheTTL'        => 10,            // time to cache generated feed, in MINUTES
+        'firehose'        => 'articles',    // the collection to use for the firehose feed, i.e. /feed/whatever
+        'categories'      => [],            // list of collections to use for /feed/<category>/whatever, if empty, disabled
       ],
 
       'routes'  => [
@@ -60,7 +60,7 @@ Kirby::plugin(
 
               if ( $availableCats == null ) {
                 header( 'HTTP/1.0 404' );
-                echo 'Category-based syndication feeds are not available';
+                echo 'Category-based syndication feeds are not available; sorry.';
                 die;
               }
               assert( $category != "" );
@@ -73,14 +73,20 @@ Kirby::plugin(
 
             if ( kirby()->collections()->has( $category ) == false ) {
               header( 'HTTP/1.0 500' );
-              echo 'Oops. A collection for syndication category feed \'' . $category . '\' was not found.';
+              echo 'Oops. Syndication feed configuration error - collection \'' . $category . '\' not found but needed for ' . ( $firehose ? "firehose" : "category-based" ) . " feed.";
               die;
             }
 
             $h = kirby()->request()->headers();
+
             if ( array_key_exists( "If-None-Match", $h ) ) {
               header( 'HTTP/1.0 304' );
               $eTag = $h['If-None-Match'];
+              if ( strpos( $eTag, 'z13' ) != 0 ) {
+                header( 'HTTP/1.0 400 Bad Request' );
+                echo 'Malformed If-None-Match \'' . $h['If-None-Match'] . '\'';
+                die;
+              }
             } else {
               $eTag = "";
             }
@@ -88,7 +94,9 @@ Kirby::plugin(
             if ( array_key_exists( "If-Modified-Since", $h ) ) {
               $lastMod = strtotime( $h['If-Modified-Since'] );
               if ( $lastMod == null ) {
-                $lastMod = 0;
+                header( 'HTTP/1.0 400 Bad Request' );
+                echo 'Malformed If-Modified-Since \'' . $h['If-Modified-Since'] . '\'';
+                die;
               }
             } else {
               $lastMod = 0;
@@ -96,22 +104,24 @@ Kirby::plugin(
 
             $dodebug = omz13\Feeds::getConfigurationForKey( 'debugqueryvalue' ) == get( 'debug' );
             $r       = omz13\Feeds::getFeedWhatever( $whatever, $category, $firehose, $lastMod, $eTag, $dodebug );
+
+            if ( $lastMod != 0 ) {
+              header( 'last-modified: ' . date( DATE_RSS, $lastMod ) );
+            }
+            if ( $eTag != "" ) {
+              header( 'etag: ' . $eTag );
+            }
+
             if ( $r != null ) {
               $mime = [
                 'atom' => 'application/atom+xml',
                 'json' => 'application/json',
                 'rss'  => 'application/rss+xml',
               ];
-              if ( $lastMod != 0 ) {
-                header( 'last-modified: ' . date( DATE_RSS, $lastMod ) );
-              }
-              if ( $eTag != "" ) {
-                header( 'etag: ' . $eTag );
-              }
               return new Kirby\Cms\Response( $r , $mime[$whatever] );
             } else {
-              if ( $eTag != "" || $lastMod != 0 ) {
-                header( 'HTTP/1.0 304' );
+              if ( $lastMod == 0 || $eTag == 0 ) {
+                header( 'HTTP/1.0 304 Not Modified' );
               } else {
                 header( 'HTTP/1.0 404 Not Found' );
               }

@@ -96,14 +96,6 @@ class Feeds
     return "";
   }//end getConfigurationForKey()
 
-/*
-  private static function getFeedWhateverByRoot( string $what, callable $generator, string $root = "", bool $debug = false ) : string {
-  $p = kirby()->site()->page( $root = "" ? static::getConfigurationForKey( 'root' ) : $root )->children()->visible(); // ->flip()->limit(10)
-  if ( $p->count() == 0 ) {
-      return "oops";
-  }
-*/
-
 /**
 * @SuppressWarnings(PHPMD.CyclomaticComplexity)
 */
@@ -121,23 +113,65 @@ class Feeds
 
     // if cacheTTL disabled...
     if ( $cacheTTL == "" || $cacheTTL == "0" || $cacheTTL == false ) {
-      $r = static::generateFeedWhatever( $generator, $collectionName, $firehose, $lastMod, $debug );
+      $r = static::generateFeedWhatever( $generator, $collectionName, $firehose, $lastMod, $eTag, $debug );
       if ( static::$debug == true ) {
         $r .= "<!-- Freshly generated; not cached for reuse -->\n";
       }
     } else {
       // try to read from cache; generate if expired
       $cacheCache = kirby()->cache( FEEDS_CONFIGURATION_PREFIX );
+      $cacheName  = FEEDS_VERSION . '-' . ( $firehose == true ? "" : $collectionName . "-" ) . $what;
+      if ( static::$debug == true ) {
+        $cacheName .= "-debug";
+      }
 
-      $cacheName = FEEDS_VERSION . '-' . ( $firehose == true ? "" : $collectionName . "-" ) . $what;
+      if ( $eTag != "" ) {
+        $magick = $cacheCache->get( $cacheName . "@et" );
+        if ( $magick != null ) {
+          if ( $eTag == $magick ) {
+            $lastMod = $cacheCache->get( $cacheName . "@lm" );
+            return null;
+          }
+        }
+      }
+
+      if ( $lastMod != 0 ) {
+        $highwater = $cacheCache->get( $cacheName . "@lm" );
+        if ( $highwater == null ) {
+          $highwater = static::getCollectionLastMod( $collectionName );
+        }
+        if ( $highwater <= $lastMod ) {
+          $eTag    = $cacheCache->get( $cacheName . "@et" );
+          $lastMod = $cacheCache->get( $cacheName . "@lm" );
+          return null;
+        }
+      }
 
       $r = $cacheCache->get( $cacheName );
+
       if ( $r == null ) {
-        $r = static::generateFeedWhatever( $generator, $collectionName, $firehose, $lastMod, $debug );
-        $cacheCache->set( $cacheName, $r, $cacheTTL );
+        $highwater = 0;
+        $magick    = "";
+        $r         = static::generateFeedWhatever( $generator, $collectionName, $firehose, $highwater, $magick, $debug );
+
+        $cacheCache->set( $cacheName . "@lm", $highwater, $cacheTTL );
+        $cacheCache->set( $cacheName . "@et", $magick, $cacheTTL );
+        $cacheCache->set( $cacheName , $r, $cacheTTL );
+
         if ( static::$debug == true ) {
           $r .= '<!-- Freshly generated; cached into ' . $cacheName . ' for ' . $cacheTTL . " minute(s) for reuse -->\n";
         }
+
+        if ( $eTag == $magick ) {
+          $r = null;
+        }
+
+        if ( $highwater <= $lastMod ) {
+          $r = null;
+        }
+
+        $lastMod = $highwater;
+        $eTag    = $magick;
       } else {
         if ( static::$debug == true ) {
           $expiresAt       = $cacheCache->expires( $cacheName );
@@ -145,7 +179,11 @@ class Feeds
 
           $r .= '<!-- Retrieved ' . $cacheName . ' from cache ; expires in ' . $secondsToExpire . " seconds -->\n";
         }
-      }
+
+        $lastMod = $cacheCache->get( $cacheName . "@lm" );
+
+        $eTag = $cacheCache->get( $cacheName . "@et" );
+      }//end if
     }//end if
 
     $tend = microtime( true );
@@ -153,14 +191,61 @@ class Feeds
       $elapsed = ( $tend - $tbeg );
       $r      .= '<!-- That all took ' . ( 1000 * $elapsed ) . " microseconds -->\n";
     }
-
-    $eTag = 'z13' . md5( $r );
     return $r;
   }//end getFeedWhatever()
 
   // G E N E R A T E - F E E D
 
-  private static function generateFeedWhatever( callable $feedPagesRunner, string $collectionName, bool $firehose, int &$lastMod, bool $debug = false ) : ?string {
+  private static function getCollectionLastMod( string $collectionName ) : int {
+    $pp = kirby()->collection( $collectionName );
+    if ( $pp == null ) {
+      return 0;
+    }
+    $sortedpages = $pp->visible()->sortBy( 'date', 'asc' )->flip()->limit( 60 );
+
+    $highwater = 0;
+    $whenMod   = 0;
+    $whenPub   = 0;
+    foreach ( $sortedpages as $p ) {
+      static::getDatesFromPage( $p, $whenMod, $whenPub );
+      if ( $whenMod > $highwater ) {
+        $highwater = $whenMod;
+      }
+    }
+    return $highwater;
+  }//end getCollectionLastMod()
+
+  private static function getDatesFromPage( Page $p, int &$whenMod, int &$whenPub ) : void {
+    // calculate lastmod
+    if ( $p->content()->has( 'updatedat' ) ) {
+      $t       = $p->content()->get( 'updatedat' );
+      $whenMod = strtotime( $t );
+    } else {
+      if ( $p->content()->has( 'date' ) ) {
+        $t       = $p->content()->get( 'date' );
+        $whenMod = strtotime( $t );
+      } else {
+        if ( file_exists( $p->contentFile() ) ) {
+          $whenMod = filemtime( $p->contentFile() );
+        }
+      }
+    }//end if
+
+    if ( $whenMod == false ) {
+      $whenMod = 0;
+    }
+
+    if ( $p->content()->has( 'date' ) ) {
+      $t       = $p->content()->get( 'date' );
+      $whenPub = strtotime( $t );
+    }
+
+    if ( $whenPub == false ) {
+      $whenPub = $whenMod;
+    }
+  }//end getDatesFromPage()
+
+  private static function generateFeedWhatever( callable $feedPagesRunner, string $collectionName, bool $firehose, int &$lastMod, string &$eTag, bool $debug = false ) : ?string {
     $pp = kirby()->collection( $collectionName );
     if ( $pp == null ) {
       return null;
@@ -190,13 +275,17 @@ class Feeds
       $r .= '<!-- Generation took ' . ( 1000 * $elapsed ) . " microseconds -->\n";
       $r .= '<!-- Generated at ' . date( DATE_ATOM, (int) $tend ) . " -->\n";
     }
+
+    $eTag = 'z13' . md5( $r );
     return $r;
   }//end generateFeedWhatever()
 
   private static function generateFeedAtom( Pages $p, ?string $collectionName, string $feedTitle, int &$lastMod, bool $debug ) : string {
-    $tnow = microtime( true );
 
     $feedme = kirby()->site()->url() . "/feeds/" . ( $collectionName != null ? $collectionName . "/" : "" ) . "atom";
+
+    $x = "";
+    static::addPagesToFeedWhatever( $p, $x, [ self::class, 'addPageToAtomFeed' ], $lastMod );
 
     $r  = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n";
     $r .= "<feed xmlns=\"http://www.w3.org/2005/Atom\">\n";
@@ -212,13 +301,14 @@ class Feeds
     $r .= "  <link href=\"" . $feedme . "\" rel=\"self\" type=\"application/atom+xml\" />\n";
     $r .= "  <link href=\"" . kirby()->site()->url() . "/\" rel=\"alternate\" type=\"text/html\" />\n";
     $r .= "  <id>" . $feedme . "</id>\n";
-    $r .= "  <updated>" . date( 'Y-m-d\TH:i:s', (int) $tnow ) . "Z</updated>\n";
+    $r .= "  <updated>" . date( 'Y-m-d\TH:i:s', (int) $lastMod ) . "Z</updated>\n";
     $r .= "  <rights>" . kirby()->site()->content()->get( 'copyright' ) . "</rights>\n";
-    $r .= "  <generator uri=\"https://github.com/omz13/\">omz13/feeds</generator>\n";
+    // $r .= "  <generator uri=\"https://github.com/omz13/\">omz13/feeds</generator>\n";
 
-    static::addPagesToFeedWhatever( $p, $r, [ self::class, 'addPageToAtomFeed' ], $lastMod );
+    $r .= $x;
+
     $r .= "</feed>\n";
-    $r .= "<!-- Atom Feed generated using https://github.com/omz13/kirby3-feeds -->\n";
+    // $r .= "<!-- Atom Feed generated using https://github.com/omz13/kirby3-feeds -->\n";
 
     return $r;
   }//end generateFeedAtom()
@@ -244,7 +334,9 @@ class Feeds
   }//end generateFeedJson()
 
   private static function generateFeedRss( Pages $p, ?string $collectionName, string $feedTitle, int &$lastMod, bool $debug ) : string {
-    $tnow = microtime( true );
+
+    $x = "";
+    static::addPagesToFeedWhatever( $p, $x, [ self::class, 'addPageToRssFeed' ], $lastMod );
 
     $r  = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n";
     $r .= "<rss version=\"2.0\" xmlns:atom=\"http://www.w3.org/2005/Atom\">\n";
@@ -256,7 +348,7 @@ class Feeds
     $r .= "    <description>" . kirby()->site()->content()->get( 'description' ) . "</description>\n";
 //    $r .= "    <language>" . kirby()->site()->language() . "</language>\n";
     $r .= "    <copyright>" . kirby()->site()->content()->get( 'copyright' ) . "</copyright>\n";
-    $r .= "    <lastBuildDate>" . date( DATE_RSS, (int) $tnow ) . "</lastBuildDate>\n";
+    $r .= "    <lastBuildDate>" . date( DATE_RSS, (int) $lastMod ) . "</lastBuildDate>\n";
 
     $ttl = static::getConfigurationForKey( 'cacheTTL' );
 
@@ -264,8 +356,8 @@ class Feeds
       $r .= "    <ttl>" . $ttl . "</ttl>\n";
     }
 
-    // static::addPagesToRssFeed( $p, $r );
-    static::addPagesToFeedWhatever( $p, $r, [ self::class, 'addPageToRssFeed' ], $lastMod );
+    $r .= $x;
+
     $r .= "  </channel>\n";
     $r .= "</rss>\n";
 
@@ -283,39 +375,13 @@ class Feeds
 
     $numPage = $sortedpages->count();
 
+    $whenMod = 0;
+    $whenPub = 0;
+
     foreach ( $sortedpages as $p ) {
       // static::addComment( $r, 'crunching ' . $p->url() . ' [it=' . $p->intendedTemplate() . '] [s=' . $p->status() . '] [d=' . $p->depth() . ']' );
 
-      // calculate lastmod
-      $whenMod = 0; // default to unix epoch (jan-1-1970)
-      if ( $p->content()->has( 'updatedat' ) ) {
-        $t       = $p->content()->get( 'updatedat' );
-        $whenMod = strtotime( $t );
-      } else {
-        if ( $p->content()->has( 'date' ) ) {
-          $t       = $p->content()->get( 'date' );
-          $whenMod = strtotime( $t );
-        } else {
-          if ( file_exists( $p->contentFile() ) ) {
-            $whenMod = filemtime( $p->contentFile() );
-          }
-        }
-      }//end if
-
-      if ( $whenMod == false ) {
-        $whenMod = 0;
-      }
-
-      $whenPub = 0; // $p->date()
-
-      if ( $p->content()->has( 'date' ) ) {
-        $t       = $p->content()->get( 'date' );
-        $whenPub = strtotime( $t );
-      }
-
-      if ( $whenPub == false ) {
-        $whenPub = $whenMod;
-      }
+      static::getDatesFromPage( $p, $whenMod, $whenPub );
 
       if ( $whenPub > $lastMod ) {
         $lastMod = $whenPub;
