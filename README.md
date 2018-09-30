@@ -25,10 +25,11 @@ Caveat:
 - Withdrawn pages (i.e. with a method `issunset` that returns `true`) can be excluded by appropriate configuration within a collection.
 - Pages under an embargo (i.e. with a method `isunderembargo` that returns `true`) can similarly be managed.
 
+Note:: This is not be a free plugin. In order to use it on a production server, you need to buy a license. For details, scroll down to the License section of this document.
 
 ### Client Support
 
-RSS feeds are generally well supported by clients; the ATOM feed offers some extra technical niceties, but client support varies; the JSON format is very new, and client support varies. I pay for and use [NewsBlur](https://www.newsblur.com), but here are others that may be of interest:
+RSS feeds are generally well supported by clients; the ATOM feed offers some extra technical niceties, but client support varies; the JSON format is very new, and client support varies.
 
 In terms of client for OS X:
 - [ReederApp](http://reederapp.com) supoorts all three formats.
@@ -48,7 +49,7 @@ In terms of generic services/clients:
 - [FeedWrangler](https://feedwrangler.net/)
 - [NewsBlur](https://www.newsblur.com) supports all three formats.
 
-In terms of Windows clients: sorry, I have no idea as I live in the OS X / iOS world.
+In terms of Windows clients: sorry, I have no idea as inhabit an OS X / iOS world.
 
 #### Related plugins
 
@@ -67,7 +68,10 @@ For 1.0, the non-binding list of planned features and implementation notes are:
 - [ ] Splitting
 - [x] Source by collection
 - [ ] Languages
-- [ ] Generate feed discovery headers
+- [x] Author into item stream
+- [ ] Category into item stream
+- [x] Generate feed discovery headers
+- [x] dc for RSS
 
 ### Installation
 
@@ -113,20 +117,25 @@ In your site's `site/config/config.php` the following entries prefixed with `omz
   - `categories` - optional - array - default `[ 'articles'] ` - the names of the kirby collections that can be accessed using the uri /feeds/<category>/atom|json|rss. If an empty array is specifed (`[]`) then this feature is disabled.
 - `debugqueryvalue` - optional - string - the value for the query parameter `debug` to return a feed with debugging information (as comments within response). The global kirby `debug` configuration must also be true for this to work. Be aware that the debugging information will show, if applicable, details of any pages that have been excluded (so if you are using this in production and you don't want things to leak, set `debugqueryvalue` to something random). Furthermore, the site debug flag needs to be set too (i.e. the `debug` flag in `site/config.php`).
 - `root` : an array of slugnames whose pages are to be included if their status is unlisted.
+- `author` - optional - string - default `'Staff Writer'` - the name to be used for each item in a feed when either the author is unknown or the syndication format does not allow an author name (looking at you RSS2).
 
 #### Feed discovery
 
-In `site/snippets/header.php` - or equivalent - you will need to add the following if you want automatic feed discovery to work:
+At a minimum you need to add appropriate feed-discovery links to your site's homepage.
+
+This plugin provides two snippets to do this:
+
+- `feeds-header` - to provide the links for all feeds (firehose and category-based)
+- `firehose-feeds-header` - to provide the links for the firehose feed only.
+
+Example:
+
+In `site/snippets/header.php` - or equivalent - simply add:
+
 
 ```php
-<link rel="alternate" type="application/atom+xml" title="Subscribe to ATOM feed" href="/feed/atom.xml" />
-<link rel="alternate" type="application/json"     title="Subscribe to JSON feed" href="/feed/feed.json" />
-<link rel="alternate" type="application/rss+xml"  title="Subscribe to RSS feed"  href="/feed/rss.xml" />
+<?php snippet('feeds-header') ?>
 ```
-
-At the very least these should be added to the site's home page, and usually to all pages in a collection that is syndicated.
-
-Note that Atom, in particular, may not work if this is not done; Json and RSS are a little more forging but, as always, YMMV.
 
 #### Collections
 
@@ -159,7 +168,7 @@ For example, for the [Kirby Starter Kit](https://github.com/k-next/starterkit), 
 
 return [
   'omz13.feeds.cacheTTL' => 60,
-  'omz13.feeds.firehose' => [ 'articles'],
+  'omz13.feeds.firehose' => [ 'articles' ],
   ],
 ];
 ```
@@ -185,15 +194,6 @@ This plugin is provided "as is" with no guarantee. Use it at your own risk and a
 
 ## License
 
-[MIT](https://opensource.org/licenses/MIT)
-
-You are prohibited from using this plugin in any project that promotes racism, sexism, homophobia, animal abuse, violence or any other form of hate speech.
-
 ### Buy Me A Coffee
 
-To show your support for this project you are welcome to [buy me a coffee](https://buymeacoff.ee/omz13).
-
-<!-- If you are using this plugin on a kirby3 site that has a Personal licence, to show your support for this project you are welcome to [buy me a coffee](https://buymeacoff.ee/omz13).
-
-If you are using this plugin with a kirby3 site that has a Pro licence, to show your support for this project you are greatly encouraged to [buy me a coffee](https://buymeacoff.ee/omz13).
--->
+Until kirby3 has been officially released, you are free to use and evaluate this plugin on test or production servers AT YOUR OWN RISK. There is no warranty. Support is at my discretion. Did I mention that I like coffee? To show your support for this project you are welcome to [buy me a coffee](https://buymeacoff.ee/omz13).
