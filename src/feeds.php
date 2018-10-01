@@ -3,6 +3,7 @@
 // phpcs:disable Generic.CodeAnalysis.UnusedFunctionParameter.Found
 // phpcs:disable SlevomatCodingStandard.Classes.UnusedPrivateElements.UnusedMethod
 // phpcs:disable SlevomatCodingStandard.Functions.UnusedParameter.UnusedParameter
+// phpcs:disable SlevomatCodingStandard.TypeHints.TypeHintDeclaration.MissingTraversableParameterTypeHintSpecification
 
 namespace omz13;
 
@@ -21,6 +22,7 @@ use function array_key_exists;
 use function array_merge;
 use function array_push;
 use function assert;
+use function count;
 use function date;
 use function define;
 use function file_exists;
@@ -33,6 +35,7 @@ use function json_encode;
 use function kirby;
 use function md5;
 use function microtime;
+use function next;
 use function str_replace;
 use function strlen;
 use function strpos;
@@ -106,6 +109,11 @@ class Feeds
     return "";
   }//end getConfigurationForKey()
 
+  /**
+  * @SuppressWarnings(PHPMD.CyclomaticComplexity)
+  * @SuppressWarnings(PHPMD.NPathComplexity)
+  * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
+  */
   public static function runRoutesFeeds( string $pa, string $pb ) : Response {
     if ( static::isEnabled() == false ) {
       return new Response(
@@ -229,9 +237,10 @@ class Feeds
     }//end if
   }//end runRoutesFeeds()
 
-/**
-* @SuppressWarnings(PHPMD.CyclomaticComplexity)
-*/
+  /**
+  * @SuppressWarnings(PHPMD.CyclomaticComplexity)
+  * @SuppressWarnings(PHPMD.NPathComplexity)
+   */
   private static function getFeedWhatever( string $what, string $collectionName, bool $firehose, int &$lastMod, string &$eTag, bool $debug = false ) : ?string {
 
     $generator = [ self::class, 'generateFeed' . ucwords( $what ) ];
@@ -334,7 +343,9 @@ class Feeds
     if ( $pp == null ) {
       return 0;
     }
-    $sortedpages = $pp->visible()->sortBy( 'date', 'asc' )->flip()->limit( 60 );
+
+    assert( $pp != null );
+    $sortedpages = $pp->sortBy( 'date', 'asc' )->flip()->limit( 60 );
 
     $highwater = 0;
     $whenMod   = 0;
@@ -589,6 +600,9 @@ class Feeds
     return 0;
   }//end addUserToStreamForAtom()
 
+  /**
+  * @SuppressWarnings(PHPMD.CyclomaticComplexity)
+  */
   private static function addPageToJsonFeed( Page $p, int $whenPub, int $whenMod, string &$r, ?bool $isLastPage = false ) : void {
 
     // $converter = new HtmlConverter( [ 'remove_nodes' => 'aardvark' ] );
@@ -633,17 +647,16 @@ class Feeds
         // construct concatenated byline
         $byline = "";
         foreach ( $aofa as $a ) {
-          if ( !next($aofa) ) {
+          if ( next( $aofa ) == true ) {
             $byline .= " and ";
           }
           $byline .= $a['name'];
         }
         $i = array_merge( $i, [ 'author' => [ 'name' => $byline ] ] );
-
-      }
+      }//end if
     } else {
       $i = array_merge( $i, [ 'author' => [ 'name' => static::getConfigurationForKey( 'author' ), 'uri' => kirby()->site()->url() ] ] );
-    }
+    }//end if
 
     $r .= json_encode(
         $i,
@@ -656,8 +669,7 @@ class Feeds
   }//end addPageToJsonFeed()
 
   private static function addUserToArrayForJson( ?string $authorEmail, array &$a ) : void {
-    if ( $authorEmail != null && $authorEmail != "" )
-    {
+    if ( $authorEmail != null && $authorEmail != "" ) {
       $user = kirby()->users()->find( $authorEmail );
       if ( $user != null ) {
         $u = [ 'name' => $user->name() ];
