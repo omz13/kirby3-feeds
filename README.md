@@ -2,7 +2,7 @@
 
  ![License](https://img.shields.io/github/license/mashape/apistatus.svg) ![Kirby Version](https://img.shields.io/badge/Kirby-3%2B-black.svg) [![Issues](https://img.shields.io/github/issues/omz13/kirby3-feeds.svg)](https://github.com/omz13/kirby3-feeds/issues)
 
-**Requirement:** Kirby 3
+**Requirement:** [Kirby 3](https://getkirby.com/next) **BETA 6** OR BETTER; do not try to use it on earlier beta versions because it relies on features that were introduced in BETA 6.
 
 ## Documentation
 
@@ -17,20 +17,20 @@ For a kirby3 site, this plugin (_omz13/feeds_)  generates syndication feeds in R
 - Generates a sub-setted syndication feed at `feeds/<category>/atom|json|rss`) where `<category>`` is mapped to a kirby `collection`.
 - Only pages that have a status of "published" are included, i.e. those with "draft" or "unpublished" are excluded.
 - A feed will have a maximum of 60 items.
-- To mitigate server load, and to return a speedy response, the generated syndication feeds are cached in the server for a determined amount of time, c.f. `cacheTTL` in _Configuration_.
+- To mitigate server load, and to return a speedy response, the generated feeds are cached in the server for a determined amount of time, c.f. `cacheTTL` in _Configuration_.
 - Respects `If-Modified-Since` and  `If-None-Match` headers and will return a `304 Not Modified` response if appropriate.
-- Uses the `author` field from a page to determine the author; this field can be either a structured field or a text field, but  it should be the email address of the author (and will be used to map to a kirby user for their detail).
+- Uses the `author` field from a page to determine the author; this field can be either a structured field or a text field, but it should be the email address of the author (and will be used to map to a kirby user for their details).
 - If an author can not be mapped to a user, a default is applied, c.f. `author` in _Configuration_.
 - For a RSS feed, provides per-item author details in `<dc:author>`.
-- For ATOM and JSon feeds, provides per-item author details: if a user has a `website` or `twitter` field this is mapped to `uri`.
+- For ATOM and JSon feeds, provides per-item author details: if a user has a `website` or `twitter` field this is mapped to "uri`.
+- For Json feeds, if an item has multiple authors, their details are given in `"authors"` per [brentsimmons/JSONFeed#120](https://github.com/brentsimmons/JSONFeed/pull/120). This is all _highly experimental_ so may break things - your feedback is appreciated.
+- For Json feeds, if an item has multiple authors, the `author` item will be a concatenation of the authors names and `uri` will be provided.
 - For debugging purposes, the generated sitemap can include additional information as comments; c.f. `debugqueryvalue` in _Configuration_.
 
 Caveat:
 - Withdrawn pages (i.e. with a method `issunset` that returns `true`) can be excluded by appropriate configuration within a collection.
 - Pages under an embargo (i.e. with a method `isunderembargo` that returns `true`) can similarly be managed.
-- May contains bugs.
-
-Note:: This is not be a free plugin. In order to use it on a production server, you need to buy a license. For details, scroll down to the License section of this document.
+- May contains bugs because there is a lot of nasty code to deal with edge cases in the various syndication specifications; where possible it tries to generate things as best it can.
 
 ### Client Support
 
@@ -201,4 +201,4 @@ This plugin is provided "as is" with no guarantee. Use it at your own risk and a
 
 ### Buy Me A Coffee
 
-Until kirby3 has been officially released, you are free to use and evaluate this plugin on test or production servers AT YOUR OWN RISK. There is no warranty. Support is at my discretion. Did I mention that I like coffee? To show your support for this project you are welcome to [buy me a coffee](https://buymeacoff.ee/omz13).
+Until kirby3 has been officially released, you are free to use and evaluate this plugin on test or production servers AT YOUR OWN RISK. There is no warranty. Support is at my discretion. Did I mention that I like coffee? This started as a simple plugin and morphed into something quite complex to cope with a combination of trying to get something sensibe out of kirby while also trying to generate something acceptable within the constraints of the different syndication formats. To show your support for this project you are welcome to [buy me a coffee](https://buymeacoff.ee/omz13).
