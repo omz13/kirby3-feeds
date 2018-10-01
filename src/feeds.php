@@ -479,7 +479,7 @@ class Feeds
     static::addPagesToFeedWhatever( $p, $x, [ self::class, 'addPageToRssFeed' ], $lastMod );
 
     $r  = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n";
-    $r .= "<rss version=\"2.0\" xmlns:atom=\"http://www.w3.org/2005/Atom\"> xmlns:dc=\"http://purl.org/dc/elements/1.1/\"\n";
+    $r .= "<rss version=\"2.0\" xmlns:atom=\"http://www.w3.org/2005/Atom\" xmlns:dc=\"http://purl.org/dc/elements/1.1/\" >\n";
 
     $r .= "  <channel>\n";
     $r .= "    <atom:link href=\"" . kirby()->site()->url() . "/feeds/" . ( $collectionName != null ? $collectionName . "/" : "" ) . "rss\" rel=\"self\" type=\"application/rss+xml\" />\n";
