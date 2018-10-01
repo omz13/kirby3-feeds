@@ -559,8 +559,10 @@ class Feeds
         if ( $user != null ) {
           $r .= "    <author>\n";
           $r .= "      <name>" . $user->name() . "</name>\n";
-          if ( $user->website() != "" ) {
-            $r .= "      <uri>" . $user->website() . "</uri>\n";
+
+          $s = $user->website()->value() != null ? $user->website()->value() : ( $user->twitter()->value() != null ? "https://twitter.com/" . str_replace( '@', '', $user->twitter()->value() ) : null );
+          if ( $s != "" ) {
+            $r .= "      <uri>" . $s . "</uri>\n";
           }
           $r .= "    </author>\n";
         }
@@ -599,8 +601,10 @@ class Feeds
         $user = kirby()->users()->find( $author );
         if ( $user != null ) {
           $u = [ 'name' => $user->name() ];
-          if ( $user->website()->value() != "" ) {
-            $u = array_merge( $u, [ 'uri' => $user->website()->value() ] );
+
+          $s = $user->website()->value() != null ? $user->website()->value() : ( $user->twitter()->value() != null ? "https://twitter.com/" . str_replace( '@', '', $user->twitter()->value() ) : null );
+          if ( $s != "" ) {
+            $u = array_merge( $u, [ 'uri' => $s ] );
           }
           array_push( $a, $u );
         }
