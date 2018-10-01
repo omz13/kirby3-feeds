@@ -177,7 +177,7 @@ class Feeds
 
     if ( array_key_exists( "If-None-Match", $h ) ) {
       $eTag = $h['If-None-Match'];
-      if ( strpos( $eTag, 'z13' ) != 0 || strlen( $eTag ) != 32 + 3 ) {
+      if ( strpos( $eTag, 'z13' ) != 0 || strlen( $eTag ) != 35 ) {
         return new Response(
             'Malformed If-None-Match \'' . $h['If-None-Match'] . '\'',
             null,
@@ -461,7 +461,7 @@ class Feeds
     // Specify author at item level.
     // $r .= "\"author\": {\n";
     // $r .= "  \"name\": \"" . static::getConfigurationForKey( 'author' ) . "\"\n";
-    $r .= "}, \n";
+    // $r .= "}, \n";
 
     $r .= "\"items\": [\n";
 
@@ -624,9 +624,25 @@ class Feeds
     }
 
     if ( $aofa != [] ) {
-      $i = array_merge( $i, [ 'author' => $aofa ] );
+      if ( count( $aofa ) == 1 ) {
+        $i = array_merge( $i, [ 'author' => $aofa[0] ] );
+      } else {
+        // "authors" per https://github.com/brentsimmons/JSONFeed/pull/120
+        $i = array_merge( $i, [ 'authors' => $aofa ] );
+
+        // construct concatenated byline
+        $byline = "";
+        foreach ( $aofa as $a ) {
+          if ( !next($aofa) ) {
+            $byline .= " and ";
+          }
+          $byline .= $a['name'];
+        }
+        $i = array_merge( $i, [ 'author' => [ 'name' => $byline ] ] );
+
+      }
     } else {
-      $i = array_merge( $i, [ 'author' => [ 'name' => static::getConfigurationForKey( 'author' ) ] ] );
+      $i = array_merge( $i, [ 'author' => [ 'name' => static::getConfigurationForKey( 'author' ), 'uri' => kirby()->site()->url() ] ] );
     }
 
     $r .= json_encode(
@@ -639,16 +655,19 @@ class Feeds
     }
   }//end addPageToJsonFeed()
 
-  private static function addUserToArrayForJson( string $authorEmail, array &$a ) : void {
-    $user = kirby()->users()->find( $authorEmail );
-    if ( $user != null ) {
-      $u = [ 'name' => $user->name() ];
+  private static function addUserToArrayForJson( ?string $authorEmail, array &$a ) : void {
+    if ( $authorEmail != null && $authorEmail != "" )
+    {
+      $user = kirby()->users()->find( $authorEmail );
+      if ( $user != null ) {
+        $u = [ 'name' => $user->name() ];
 
-      $s = $user->website()->value() != null ? $user->website()->value() : ( $user->twitter()->value() != null ? "https://twitter.com/" . str_replace( '@', '', $user->twitter()->value() ) : null );
-      if ( $s != "" ) {
-        $u = array_merge( $u, [ 'uri' => $s ] );
+        $s = $user->website()->value() != null ? $user->website()->value() : ( $user->twitter()->value() != null ? "https://twitter.com/" . str_replace( '@', '', $user->twitter()->value() ) : null );
+        if ( $s != "" ) {
+          $u = array_merge( $u, [ 'uri' => $s ] );
+        }
+        array_push( $a, $u );
       }
-      array_push( $a, $u );
     }
   }//end addUserToArrayForJson()
 
