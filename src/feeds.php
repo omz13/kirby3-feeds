@@ -752,9 +752,9 @@ class Feeds
     $t = kirby()->site()->content()->get( 'title' );
 
     // firehose
-    $r  = "<link rel=\"alternate\" type=\"application/atom+xml\" title=\"The main ATOM feed for " . $t . "\" href=\"" . kirby()->site()->url() . "/feeds/atom\" />\n";
-    $r .= "<link rel=\"alternate\" type=\"application/json\" title=\"The main JSON feed for " . $t . "\" href=\"" . kirby()->site()->url() . "/feeds/json\" />\n";
-    $r .= "<link rel=\"alternate\" type=\"application/rss+xml\" title=\"The main RSS2 feed for " . $t . "\" href=\"" . kirby()->site()->url() . "/feeds/rss\" />\n";
+    $r  = "<link rel=\"alternate\" type=\"application/atom+xml\" title=\"ATOM feed for " . $t . "\" href=\"" . kirby()->site()->url() . "/feeds/atom\" />\n";
+    $r .= "<link rel=\"alternate\" type=\"application/json\" title=\"JSON feed for " . $t . "\" href=\"" . kirby()->site()->url() . "/feeds/json\" />\n";
+    $r .= "<link rel=\"alternate\" type=\"application/rss+xml\" title=\"RSS2 feed for " . $t . "\" href=\"" . kirby()->site()->url() . "/feeds/rss\" />\n";
 
     if ( $includeAll == true ) {
       $availableCats = static::getArrayConfigurationForKey( 'categories' );
