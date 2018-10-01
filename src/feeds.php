@@ -217,7 +217,7 @@ class Feeds
       $mime = [
         'atom' => 'text/xml', // application/atom+xml
         'json' => 'application/json',
-        'rss'  => 'text/xml',  // application/rss+xml
+        'rss'  => 'application/rss+xml',  // application/rss+xml
       ];
       return new Response( $r , $mime[$whatever] );
     } else {
@@ -458,10 +458,9 @@ class Feeds
     $r .= "\"home_page_url\": \"" . kirby()->site()->url() . "\",\n";
     $r .= "\"feed_url\": \"" . kirby()->site()->url() . "/feeds/" . ( $collectionName != null ? $collectionName . "/" : "" ) . "json\",\n";
 
-    $r .= "\"author\": {\n";
-    $r .= "  \"name\": \"" . static::getConfigurationForKey( 'author' ) . "\"\n";
-    // todo: url:
-    // todo: avatar
+    // Specify author at item level.
+    // $r .= "\"author\": {\n";
+    // $r .= "  \"name\": \"" . static::getConfigurationForKey( 'author' ) . "\"\n";
     $r .= "}, \n";
 
     $r .= "\"items\": [\n";
@@ -537,7 +536,7 @@ class Feeds
 
   private static function addPageToAtomFeed( Page $p, int $whenPub, int $whenMod, string &$r, ?bool $isLastPage = false ) : void {
     $r .= "  <entry>\n";
-    $r .= '    <title>' . $p->content()->get( 'title' ) . "</title>\n";
+    $r .= '    <title>' . Xml::encode( $p->content()->get( 'title' ) ) . "</title>\n";
     $r .= "    <id>" . $p->url() . "</id>\n";
 
     $r .= '    <updated>' . date( 'Y-m-d\TH:i:s', $whenMod ) . "Z</updated>\n";
@@ -551,30 +550,44 @@ class Feeds
     $r .= "    </content>\n";
     // $r .= "    <author><name>Staff Writer</name><email>johndoe@example.com</email></author>\n";
 
-    // atom allows multiple authors
+    $countA  = 0;
     $authors = $p->author();
     if ( $authors != null && $authors != "" ) {
-      foreach ( $authors->yaml() as $author ) {
-        $user = kirby()->users()->find( $author );
-        if ( $user != null ) {
-          $r .= "    <author>\n";
-          $r .= "      <name>" . $user->name() . "</name>\n";
-
-          $s = $user->website()->value() != null ? $user->website()->value() : ( $user->twitter()->value() != null ? "https://twitter.com/" . str_replace( '@', '', $user->twitter()->value() ) : null );
-          if ( $s != "" ) {
-            $r .= "      <uri>" . $s . "</uri>\n";
-          }
-          $r .= "    </author>\n";
+      $a = $authors->toArray()['author'];
+      if ( $a != null && $a[0] == '-' ) {
+        // structured field
+        foreach ( $authors->yaml() as $author ) {
+          $countA += static::addUserToStreamForAtom( $r, $author );
         }
+      } else {
+        $countA += static::addUserToStreamForAtom( $r, $a );
       }
-    } else {
+    }
+
+    if ( $countA == 0 ) {
       $r .= "    <author>\n";
       $r .= "      <name>" . static::getConfigurationForKey( 'author' ) . "</name>\n";
       $r .= "    </author>\n";
-    }//end if
+    }
 
     $r .= "  </entry>\n";
   }//end addPageToAtomFeed()
+
+  private static function addUserToStreamForAtom( string &$r, string $authorEmail ) : int {
+    $user = kirby()->users()->find( $authorEmail );
+    if ( $user != null ) {
+      $r .= "    <author>\n";
+      $r .= "      <name>" . Xml::encode( $user->name() ) . "</name>\n";
+
+      $s = $user->website()->value() != null ? $user->website()->value() : ( $user->twitter()->value() != null ? "https://twitter.com/" . str_replace( '@', '', $user->twitter()->value() ) : null );
+      if ( $s != "" ) {
+        $r .= "      <uri>" . $s . "</uri>\n";
+      }
+      $r .= "    </author>\n";
+      return 1;
+    }
+    return 0;
+  }//end addUserToStreamForAtom()
 
   private static function addPageToJsonFeed( Page $p, int $whenPub, int $whenMod, string &$r, ?bool $isLastPage = false ) : void {
 
@@ -595,24 +608,25 @@ class Feeds
 
     $authors = $p->author();
 
-    $a = [];
+    $aofa = [];
     if ( $authors != null && $authors != "" ) {
-      foreach ( $authors->yaml() as $author ) {
-        $user = kirby()->users()->find( $author );
-        if ( $user != null ) {
-          $u = [ 'name' => $user->name() ];
-
-          $s = $user->website()->value() != null ? $user->website()->value() : ( $user->twitter()->value() != null ? "https://twitter.com/" . str_replace( '@', '', $user->twitter()->value() ) : null );
-          if ( $s != "" ) {
-            $u = array_merge( $u, [ 'uri' => $s ] );
-          }
-          array_push( $a, $u );
+      $a = $authors->toArray()['author'];
+      if ( $a != null && $a[0] == '-' ) {
+        // structured field
+        foreach ( $authors->yaml() as $author ) {
+          static::addUserToArrayForJson( $author, $aofa );
         }
+      } else {
+        // singleton
+        $user = kirby()->users()->find( $a );
+        static::addUserToArrayForJson( $user, $aofa );
       }
     }
 
-    if ( $a != [] ) {
-      $i = array_merge( $i, [ 'author' => $a ] );
+    if ( $aofa != [] ) {
+      $i = array_merge( $i, [ 'author' => $aofa ] );
+    } else {
+      $i = array_merge( $i, [ 'author' => [ 'name' => static::getConfigurationForKey( 'author' ) ] ] );
     }
 
     $r .= json_encode(
@@ -625,9 +639,22 @@ class Feeds
     }
   }//end addPageToJsonFeed()
 
+  private static function addUserToArrayForJson( string $authorEmail, array &$a ) : void {
+    $user = kirby()->users()->find( $authorEmail );
+    if ( $user != null ) {
+      $u = [ 'name' => $user->name() ];
+
+      $s = $user->website()->value() != null ? $user->website()->value() : ( $user->twitter()->value() != null ? "https://twitter.com/" . str_replace( '@', '', $user->twitter()->value() ) : null );
+      if ( $s != "" ) {
+        $u = array_merge( $u, [ 'uri' => $s ] );
+      }
+      array_push( $a, $u );
+    }
+  }//end addUserToArrayForJson()
+
   private static function addPageToRssFeed( Page $p, int $whenPub, int $whenMod, string &$r, ?bool $isLastPage = false ) : void {
     $r .= "  <item>\n";
-    $r .= "    <title>" . $p->content()->get( 'title' ) . "</title>\n";
+    $r .= "    <title>" . Xml::encode( $p->content()->get( 'title' ) ) . "</title>\n";
     $r .= "    <link>" . $p->url() . "</link>\n";
     $r .= "    <description>\n";
 
@@ -637,14 +664,23 @@ class Feeds
 
     $r .= "    </description>\n";
 
+    $countA  = 0;
     $authors = $p->author();
     if ( $authors != null && $authors != "" ) {
-      foreach ( $authors->yaml() as $author ) {
-        $user = kirby()->users()->find( $author );
-        if ( $user != null ) {
-          $r .= "      <dc:creator>" . $user->name() . "</dc:creator>\n";
+      $a = $authors->toArray()['author'];
+      if ( $a != null && $a[0] == '-' ) {
+        // structured field
+        foreach ( $authors->yaml() as $author ) {
+          $countA += static::addUserToStreamRss( $r, $author );
         }
+      } else {
+        // singleton
+        $countA += static::addUserToStreamRss( $r, $a );
       }
+    }
+
+    if ( $countA == 0 ) {
+      $r .= "      <dc:creator>" . Xml::encode( static::getConfigurationForKey( 'author' ) ) . "</dc:creator>\n";
     }
 
     // category
@@ -655,6 +691,15 @@ class Feeds
 
     $r .= "  </item>\n";
   }//end addPageToRssFeed()
+
+  private static function addUserToStreamRss( string &$r, string $authorEmail ) : int {
+    $user = kirby()->users()->find( $authorEmail );
+    if ( $user != null ) {
+      $r .= "      <dc:creator>" . Xml::encode( $user->name() ) . "</dc:creator>\n";
+      return 1;
+    }
+    return 0;
+  }//end addUserToStreamRss()
 
   private static function addComment( string &$r, string $m ) : void {
     if ( static::$debug == true ) {

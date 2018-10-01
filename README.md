@@ -15,15 +15,20 @@ For a kirby3 site, this plugin (_omz13/feeds_)  generates syndication feeds in R
 - Generates an [ATOM](https://validator.w3.org/feed/docs/atom.html) syndication feed (at `/feeds/atom`).
 - Generates a [JSON 1](https://jsonfeed.org/version/1) syndication feed (at `/feeds/json`).
 - Generates a sub-setted syndication feed at `feeds/<category>/atom|json|rss`) where `<category>`` is mapped to a kirby `collection`.
-- A feed will have a maximum of 60 items.
-- The generated syndication feeds are cached in the server for a determined amount of time, c.f. `cacheTTL` in _Configuration_, to mitigate server load.
 - Only pages that have a status of "published" are included, i.e. those with "draft" or "unpublished" are excluded.
+- A feed will have a maximum of 60 items.
+- To mitigate server load, and to return a speedy response, the generated syndication feeds are cached in the server for a determined amount of time, c.f. `cacheTTL` in _Configuration_.
 - Respects `If-Modified-Since` and  `If-None-Match` headers and will return a `304 Not Modified` response if appropriate.
+- Uses the `author` field from a page to determine the author; this field can be either a structured field or a text field, but  it should be the email address of the author (and will be used to map to a kirby user for their detail).
+- If an author can not be mapped to a user, a default is applied, c.f. `author` in _Configuration_.
+- For a RSS feed, provides per-item author details in `<dc:author>`.
+- For ATOM and JSon feeds, provides per-item author details: if a user has a `website` or `twitter` field this is mapped to `uri`.
 - For debugging purposes, the generated sitemap can include additional information as comments; c.f. `debugqueryvalue` in _Configuration_.
 
 Caveat:
 - Withdrawn pages (i.e. with a method `issunset` that returns `true`) can be excluded by appropriate configuration within a collection.
 - Pages under an embargo (i.e. with a method `isunderembargo` that returns `true`) can similarly be managed.
+- May contains bugs.
 
 Note:: This is not be a free plugin. In order to use it on a production server, you need to buy a license. For details, scroll down to the License section of this document.
 
