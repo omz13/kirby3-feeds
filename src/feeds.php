@@ -10,6 +10,7 @@ namespace omz13;
 use Kirby\Cms\Page;
 use Kirby\Cms\Pages;
 use Kirby\Cms\Response;
+use Kirby\Cms\User;
 use Kirby\Toolkit\Xml;
 use League\HTMLToMarkdown\HtmlConverter;
 
@@ -25,6 +26,7 @@ use function assert;
 use function count;
 use function date;
 use function define;
+use function explode;
 use function file_exists;
 use function filemtime;
 use function get;
@@ -588,9 +590,9 @@ class Feeds
     $user = kirby()->users()->find( $authorEmail );
     if ( $user != null ) {
       $r .= "    <author>\n";
-      $r .= "      <name>" . Xml::encode( $user->name() ) . "</name>\n";
+      $r .= "      <name>" . Xml::encode( static::getNameForKirbyUser( $user ) ) . "</name>\n";
 
-      $s = $user->website()->value() != null ? $user->website()->value() : ( $user->twitter()->value() != null ? "https://twitter.com/" . str_replace( '@', '', $user->twitter()->value() ) : null );
+      $s = static::getUriForKirbyUser( $user );
       if ( $s != "" ) {
         $r .= "      <uri>" . $s . "</uri>\n";
       }
@@ -646,10 +648,16 @@ class Feeds
 
         // construct concatenated byline
         $byline = "";
+        $count  = 0;
         foreach ( $aofa as $a ) {
-          if ( next( $aofa ) == true ) {
+          if ( next( $aofa ) == false ) {
             $byline .= " and ";
+          } else {
+            if ( $count > 0 ) {
+              $byline .= ", ";
+            }
           }
+          $count  += 1;
           $byline .= $a['name'];
         }
         $i = array_merge( $i, [ 'author' => [ 'name' => $byline ] ] );
@@ -672,10 +680,10 @@ class Feeds
     if ( $authorEmail != null && $authorEmail != "" ) {
       $user = kirby()->users()->find( $authorEmail );
       if ( $user != null ) {
-        $u = [ 'name' => $user->name() ];
+        $u = [ 'name' => static::getNameForKirbyUser( $user ) ];
 
-        $s = $user->website()->value() != null ? $user->website()->value() : ( $user->twitter()->value() != null ? "https://twitter.com/" . str_replace( '@', '', $user->twitter()->value() ) : null );
-        if ( $s != "" ) {
+        $s = static::getUriForKirbyUser( $user );
+        if ( $s != null && $s != "" ) {
           $u = array_merge( $u, [ 'uri' => $s ] );
         }
         array_push( $a, $u );
@@ -726,11 +734,34 @@ class Feeds
   private static function addUserToStreamRss( string &$r, string $authorEmail ) : int {
     $user = kirby()->users()->find( $authorEmail );
     if ( $user != null ) {
-      $r .= "      <dc:creator>" . Xml::encode( $user->name() ) . "</dc:creator>\n";
+      $r .= "      <dc:creator>" . Xml::encode( static::getNameForKirbyUser( $user ) ) . "</dc:creator>\n";
       return 1;
     }
     return 0;
   }//end addUserToStreamRss()
+
+  private static function getNameForKirbyUser( User $user ) : string {
+    assert( $user != null );
+    $username = $user->name();
+    if ( $username == null ) {
+      $emailParts = explode( "@", $user->email(), 2 );
+      $username   = ucwords( $emailParts[0] );
+    }
+    return $username;
+  }//end getNameForKirbyUser()
+
+  private static function getUriForKirbyUser( User $user ) : string {
+    assert( $user != null );
+    if ( $user->website()->value() != null ) {
+      return $user->website()->value();
+    }
+
+    if ( $user->twitter()->value() != null ) {
+      return "https://twitter.com/" . str_replace( '@', '', $user->twitter()->value() );
+    }
+
+    return "";
+  }//end getUriForKirbyUser()
 
   private static function addComment( string &$r, string $m ) : void {
     if ( static::$debug == true ) {
