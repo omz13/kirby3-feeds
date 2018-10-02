@@ -14,6 +14,7 @@ parameters:
 	- '#Static call to instance method omz13\\Feeds::getNameOfClass\(\).#'
 	- '#Cannot access offset 1 on callable.#'
 	- '#expects callable, array#'
+	- '#Call to an undefined method Kirby\\Cms\\User::[a-z]+\(\).#'
 	tmpDir: %rootDir%/tmp
 	level: 5
 includes:
