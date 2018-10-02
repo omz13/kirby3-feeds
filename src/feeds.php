@@ -451,7 +451,7 @@ class Feeds
     $r .= "  <id>" . $feedme . "</id>\n";
     $r .= "  <updated>" . date( 'Y-m-d\TH:i:s', (int) $lastMod ) . "Z</updated>\n";
     $r .= "  <rights>" . kirby()->site()->content()->get( 'copyright' ) . "</rights>\n";
-    // $r .= "  <generator uri=\"https://github.com/omz13/\">omz13/feeds</generator>\n";
+    $r .= "  <generator uri=\"https://github.com/omz13/kirby3-feeds\">" . strtolower( str_replace( '\\', '-', static::getNameOfClass() ) ) . "</generator>\n";
 
     $r .= $x;
 
