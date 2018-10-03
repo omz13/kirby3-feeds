@@ -1,6 +1,6 @@
 {
   "name": "omz13/kirby3-feeds",
-  "description": "kirby3 plugin to generate syndication feeds (atom and json)",
+  "description": "kirby3 plugin to generate syndication feeds (atom, json, rss) from collections",
   "keywords": [
     "kirby3",
     "plugin",
