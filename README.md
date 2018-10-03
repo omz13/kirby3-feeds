@@ -13,19 +13,20 @@ For a kirby3 site, this plugin (_omz13/feeds_)  generates syndication feeds in R
 - Generates syndication feeds based on a Kirby3 `collection`.
 - Generates a [RSS 2.0](https://validator.w3.org/feed/docs/rss2.html) syndication feed (at `/feeds/rss`).
 - Generates an [ATOM](https://validator.w3.org/feed/docs/atom.html) syndication feed (at `/feeds/atom`).
-- Generates a [JSON 1](https://jsonfeed.org/version/1) syndication feed (at `/feeds/json`).
-- Generates a sub-setted syndication feed at `feeds/<category>/atom|json|rss`) where `<category>` is mapped to a kirby `collection`.
+- Generates a [JSON 1](https://JSONfeed.org/version/1) syndication feed (at `/feeds/JSON`).
+- Generates a sub-setted syndication feed at `feeds/<category>/atom|JSON|rss`) where `<category>` is mapped to a kirby `collection`.
 - If a page is given in a collection it will be included in a syndication feed; therefore, ensure that the collection filters "published" or "draft" per your requirements because this plugin does no explicit filtering (because you may want to have a feed for drafts).
 - A feed will have a maximum of 60 items.
 - To mitigate server load, and to return a speedy response, the generated feeds are cached in the server for a determined amount of time, c.f. `cacheTTL` in _Configuration_.
 - Respects `If-Modified-Since` and  `If-None-Match` headers and will return a `304 Not Modified` response if appropriate (and save you bandwidth).
 - Uses the `author` field from a page to determine the author: this field can be either a structured field or a text field, but it should be the email address of the author (and will be used to map to a kirby user for their details). If an author can not be mapped to a user, a default is applied, c.f. `author` in _Configuration_.
-- For ATOM and JSon feeds, per author details are supplemented by their user `website` or `twitter`  data mapping to `uri`.
+- For ATOM and JSON feeds, per author details are supplemented by their user `website` or `twitter`  data mapping to `uri`.
 - If an item has multiple authors:
-  - For RSS and Json feeds, the author will be given a concatenation of the authors' names (e.g. "Ford and Zaphod").
+  - For RSS and JSON feeds, the author will be given a concatenation of the authors' names (e.g. "Ford and Zaphod").
   - For RSS, each author is listed individually in `<dc:creator>`.
-  - For Json, each author's details are given in `authors` per [brentsimmons/JSONFeed#120](https://github.com/brentsimmons/JSONFeed/pull/120). This is all _highly experimental_ so may break things - your feedback is appreciated.
+  - For JSON, each author's details are given in `authors` per [brentsimmons/JSONFeed#120](https://github.com/brentsimmons/JSONFeed/pull/120). This is all _highly experimental_ so may break things - your feedback is appreciated.
 - For a RSS feed, also provides `<dc:date>` for each item, and `<dc:rights>` for the channel.
+- For a JSON feed, in addition to providing html content in `content_html` a markdown version is also provied in `content_text`; note that the markdown version is generated from the html representation and is not simply the raw (markdown + kirbytext) page content.
 - For debugging purposes, the generated sitemap can include additional information as comments; c.f. `debugqueryvalue` in _Configuration_.
 
 Caveat:
