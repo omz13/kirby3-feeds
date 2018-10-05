@@ -20,7 +20,7 @@ For a kirby3 site, this plugin (_omz13/feeds_)  generates syndication feeds in R
 - To mitigate server load, and to return a speedy response, the generated feeds are cached in the server for a determined amount of time, c.f. `cacheTTL` in _Configuration_.
 - Support HTTP conditional get (with strong validation): i.e. respects `If-Modified-Since` and  `If-None-Match` headers and will return a `304 Not Modified` response if appropriate (saves your bandwidth).
 - Uses the `author` field from a page to determine the author: this field can be either a structured field or a text field, but it should be the email address of the author (and will be used to map to a kirby user for their details). If an author can not be mapped to a user, a default is applied, c.f. `author` in _Configuration_.
-- For ATOM and JSON feeds, per author details are supplemented by their user `website` or `twitter`  data mapping to `uri`.
+- For ATOM and JSON feeds, per author details are supplemented by their user (in order of preference) `website` or `twitter` or `instagram` data mapping to `uri`.
 - If an item has multiple authors:
   - For RSS and JSON feeds, the author will be given a concatenation of the authors' names (e.g. "Ford and Zaphod").
   - For RSS, each author is listed individually in `<dc:creator>`.

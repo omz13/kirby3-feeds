@@ -471,10 +471,10 @@ class Feeds
     $r .= "\"home_page_url\": \"" . kirby()->site()->url() . "\",\n";
     $r .= "\"feed_url\": \"" . kirby()->site()->url() . "/feeds/" . ( $collectionName != null ? $collectionName . "/" : "" ) . "json\",\n";
 
-    // Specify author at item level.
-    // $r .= "\"author\": {\n";
-    // $r .= "  \"name\": \"" . static::getConfigurationForKey( 'author' ) . "\"\n";
-    // $r .= "}, \n";
+    // no "author" here ; specify at item level.
+
+    // "icon" (ideal 512x512).
+    // "favicon" (ideal 64 x 64).
 
     $r .= "\"items\": [\n";
 
@@ -758,6 +758,10 @@ class Feeds
 
     if ( $user->twitter()->value() != null ) {
       return "https://twitter.com/" . str_replace( '@', '', $user->twitter()->value() );
+    }
+
+    if ( $user->instagram()->value() != null ) {
+      return "https://instagram.com/" . str_replace( '@', '', $user->instagram()->value() );
     }
 
     return "";
