@@ -2,5 +2,14 @@
 VERSION 0  BETA RELEASE
 =======================
 
+   Version 0.2 - beta release
+      12/10/2018 09:33  0.2.0  initial release
+         617395b Chore: composer update
+         90e716d Docs: edit for clarity
+         1b7f4f5 Feature: pick up Instagram for user
+         5af86a0 Docs: conditional get
+         53637ce Docs: edit
+         120321d Fix: description update
+
    Version 0.1 - beta release
       02/10/2018 14:21  0.1.0  initial release
