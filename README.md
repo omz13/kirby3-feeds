@@ -8,47 +8,47 @@
 
 ### Purpose
 
-For a kirby3 site, this plugin (_omz13/feeds_)  generates syndication feeds in RSS, ATOM, and JSON formats.
+For a kirby3 site, this plugin (_omz13/feeds_)  generates syndication feeds in RSS, ATOM, and JSON formats based on a Kirby3 `collection`. If a page is given in a collection it will be included in a syndication feed; therefore, ensure that the collection filters "published" or "draft" per your requirements because this plugin does no filtering whatsoever (because you may want to do something like have a feed for drafts). You are in control of what does or does not get put into a feed (and this can be different from what is publically shown on a site).
 
-- Generates syndication feeds based on a Kirby3 `collection`.
-- Generates a [RSS 2.0](https://validator.w3.org/feed/docs/rss2.html) syndication feed (at `/feeds/rss`).
-- Generates an [ATOM](https://validator.w3.org/feed/docs/atom.html) syndication feed (at `/feeds/atom`).
-- Generates a [JSON 1](https://JSONfeed.org/version/1) syndication feed (at `/feeds/JSON`).
-- Generates a sub-setted syndication feed at `feeds/<category>/atom|JSON|rss`) where `<category>` is mapped to a kirby `collection`.
-- If a page is given in a collection it will be included in a syndication feed; therefore, ensure that the collection filters "published" or "draft" per your requirements because this plugin does no explicit filtering (because you may want to have a feed for drafts).
+- Kirby3 `collection` to atom/json/rss-feed methodology.
+- Generates a [RSS 2.0](https://validator.w3.org/feed/docs/rss2.html) syndication feed (at `/feeds/rss`) based on a default `collection`.
+- Generates an [ATOM](https://validator.w3.org/feed/docs/atom.html) syndication feed (at `/feeds/atom`) based on a default `collection`.
+- Generates a [JSON 1](https://jsonfeed.org/version/1) syndication feed (at `/feeds/json`) based on a default `collection`.
+- Generates sub-setted syndication feeds at `feeds/<category>/atom|json|rss`) where `<category>` is mapped to a kirby `collection`.
 - A feed will have a maximum of 60 items.
 - To mitigate server load, and to return a speedy response, the generated feeds are cached in the server for a determined amount of time, c.f. `cacheTTL` in _Configuration_.
 - Support HTTP conditional get (with strong validation): i.e. respects `If-Modified-Since` and  `If-None-Match` headers and will return a `304 Not Modified` response if appropriate (saves your bandwidth).
 - Uses the `author` field from a page to determine the author: this field can be either a structured field or a text field, but it should be the email address of the author (and will be used to map to a kirby user for their details). If an author can not be mapped to a user, a default is applied, c.f. `author` in _Configuration_.
 - For ATOM and JSON feeds, per author details are supplemented by their user (in order of preference) `website` or `twitter` or `instagram` data mapping to `uri`.
 - If an item has multiple authors:
-  - For RSS and JSON feeds, the author will be given a concatenation of the authors' names (e.g. "Ford and Zaphod").
-  - For RSS, each author is listed individually in `<dc:creator>`.
+  - For RSS and JSON feeds, the author will be given a concatenation of the authors' names (e.g. if the authors are Ford and Zaphod, they would be attributed as "Ford and Zaphod").
+  - For RSS, each author is additionally listed individually in `<dc:creator>`.
   - For JSON, each author's details are given in `authors` per [brentsimmons/JSONFeed#120](https://github.com/brentsimmons/JSONFeed/pull/120). This is all _highly experimental_ so may break things - your feedback is appreciated.
 - For a RSS feed, also provides `<dc:date>` for each item, and `<dc:rights>` for the channel.
 - For a JSON feed, in addition to providing html content in `content_html` a markdown version is also provied in `content_text`; note that the markdown version is generated from the html representation and is not simply the raw (markdown + kirbytext) page content.
-- For debugging purposes, the generated sitemap can include additional information as comments; c.f. `debugqueryvalue` in _Configuration_.
+- For debugging purposes, the generated sitemap can include additional information as comments; c.f. `debugqueryvalue` in _Configuration_. The output may still work with a reader, but it is intended for _debugging_ not _consuming_.
 
 Caveat:
 - Withdrawn pages (i.e. with a method `issunset` that returns `true`) can be excluded by appropriate configuration within a collection.
 - Pages under an embargo (i.e. with a method `isunderembargo` that returns `true`) can similarly be managed.
-- May contains bugs because there is a lot of nasty code to deal with edge cases in the various syndication specifications; where possible it tries to generate things as best it can.
+- May contains bugs because there is a lot of nasty code to deal with edge cases in the various syndication specifications; where possible it tries to generate things as best it can (i.e. sensible assumptions).
 
 ### Client Support
 
-RSS feeds are generally well supported by clients; the ATOM feed offers some extra technical niceties, but client support varies; the JSON format is very new, and client support varies.
+RSS feeds are generally well supported by clients; the ATOM feed offers some extra technical niceties, but client support varies; the JSON format is very new, and client support varies. Here are details of a few clients that I have used:
 
 In terms of client for OS X:
+- [Readkit](https://readkitapp.com), does RSS and ATOM, but not JSON; it is über-fussy with the way it resolves names to hosts (and will just moan about "invalid feed" instead of really saying what it thinks is wrong).
 - [ReederApp](http://reederapp.com) supoorts all three formats.
-- [Vienna](http://www.vienna-rss.com) does RSS and ATOM but not JSON.
-- [Readkit](https://readkitapp.com), for some unknown reason, is über-fussy does not like anything generated by this plugin.
 - [Leaf](https://rockysandstudio.com) supports RSS and ATOM - note: not updated since Nov 2017.
 - [NetNewsWire](https://ranchero.com/netnewswire/) - supoorts all three formats - note: v5 has gone back to Brent, so very _alpha_ at the moment.
+- [NewsExplorer](https://betamagic.nl/products/newsexplorer.html) - supoorts all three formats.
+- [Vienna](http://www.vienna-rss.com) does RSS and ATOM but not JSON.
 
 In terms of iOS:
-- ReederApp - see OS X
 - Readkit - see OS X
-- [NewsExplorer]() - supoorts all three formats
+- ReederApp - see OS X
+- NewsExplorer (does Apple TV too!)
 
 In terms of generic services/clients:
 - [FeedBin](https://feedbin.com/)
