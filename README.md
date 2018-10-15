@@ -8,16 +8,16 @@
 
 ### Purpose
 
-For a kirby3 site, this plugin (_omz13/feeds_)  generates syndication feeds in RSS, ATOM, and JSON formats based on a Kirby3 `collection`. If a page is given in a collection it will be included in a syndication feed; therefore, ensure that the collection filters "published" or "draft" per your requirements because this plugin does no filtering whatsoever (because you may want to do something like have a feed for drafts). You are in control of what does or does not get put into a feed (and this can be different from what is publically shown on a site).
+For a kirby3 site, this plugin (_omz13/feeds_)  generates syndication feeds in RSS, ATOM, and JSON formats based on a Kirby3 "collection". If a page is given in a collection it will be included in a syndication feed; therefore, ensure that the collection filters "published" or "draft" per your requirements because this plugin does no filtering whatsoever (because you may want to do something like have a feed for drafts). You are in control of what does or does not get put into a feed (and this can be different from what is publically shown on a site).
 
-- Kirby3 `collection` to atom/json/rss-feed methodology.
-- Generates a [RSS 2.0](https://validator.w3.org/feed/docs/rss2.html) syndication feed (at `/feeds/rss`) based on a default `collection`.
-- Generates an [ATOM](https://validator.w3.org/feed/docs/atom.html) syndication feed (at `/feeds/atom`) based on a default `collection`.
-- Generates a [JSON 1](https://jsonfeed.org/version/1) syndication feed (at `/feeds/json`) based on a default `collection`.
-- Generates sub-setted syndication feeds at `feeds/<category>/atom|json|rss`) where `<category>` is mapped to a kirby `collection`.
+- Kirby3 "collection" to atom/json/rss-feed methodology.
+- Generates a [RSS 2.0](https://validator.w3.org/feed/docs/rss2.html) syndication feed (at `/feeds/rss`) based on a default collection, c.f. `firehose` in _Configuration_.
+- Generates an [ATOM](https://validator.w3.org/feed/docs/atom.html) syndication feed (at `/feeds/atom`) based on a default collection.
+- Generates a [JSON 1](https://jsonfeed.org/version/1) syndication feed (at `/feeds/json`) based on a default collection.
+- Generates sub-setted syndication feeds at `feeds/<category>/atom|json|rss`) where `<category>` is mapped to a kirby collection,  c.f. `categories` in _Configuration_.
 - A feed will have a maximum of 60 items.
 - To mitigate server load, and to return a speedy response, the generated feeds are cached in the server for a determined amount of time, c.f. `cacheTTL` in _Configuration_.
-- Support HTTP conditional get (with strong validation): i.e. respects `If-Modified-Since` and  `If-None-Match` headers and will return a `304 Not Modified` response if appropriate (saves your bandwidth).
+- Supports HTTP conditional get (with strong validation): i.e. respects `If-Modified-Since` and  `If-None-Match` headers and will return a `304 Not Modified` response if appropriate (saves your bandwidth).
 - Uses the `author` field from a page to determine the author: this field can be either a structured field or a text field, but it should be the email address of the author (and will be used to map to a kirby user for their details). If an author can not be mapped to a user, a default is applied, c.f. `author` in _Configuration_.
 - For ATOM and JSON feeds, per author details are supplemented by their user (in order of preference) `website` or `twitter` or `instagram` data mapping to `uri`.
 - If an item has multiple authors:
@@ -123,7 +123,6 @@ In your site's `site/config/config.php` the following entries prefixed with `omz
   - `firehose` - optional - string - default `'articles'` - the name of the kirby collection to be used for the 'firehose' feed /feeds/atom|json|rss.
   - `categories` - optional - array - default `[ 'articles'] ` - the names of the kirby collections that can be accessed using the uri /feeds/<category>/atom|json|rss. If an empty array is specifed (`[]`) then this feature is disabled.
 - `debugqueryvalue` - optional - string - the value for the query parameter `debug` to return a feed with debugging information (as comments within response). The global kirby `debug` configuration must also be true for this to work. Be aware that the debugging information will show, if applicable, details of any pages that have been excluded (so if you are using this in production and you don't want things to leak, set `debugqueryvalue` to something random). Furthermore, the site debug flag needs to be set too (i.e. the `debug` flag in `site/config.php`).
-- `root` : an array of slugnames whose pages are to be included if their status is unlisted.
 - `author` - optional - string - default `'Staff Writer'` - the name to be used for each item in a feed when either the author is unknown or the syndication format does not allow an author name (looking at you RSS2).
 
 #### Feed discovery
