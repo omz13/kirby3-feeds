@@ -120,8 +120,8 @@ In your site's `site/config/config.php` the following entries prefixed with `omz
 
 - `disable` - optional - boolean - default `false` - a boolean which, if true, to disable serving syndication feeds. Requests to such pages will receive a `503 Service Unavailable`.
 - `cacheTTL` - optional - integer - default `10` - the number of minutes that a feed should be cached before being regenerated; if explicitly set to zero, the cache is disabled. If not specified a default of 10 minutes is assumed.
-  - `firehose` - optional - string - default `'articles'` - the name of the kirby collection to be used for the 'firehose' feed /feeds/atom|json|rss.
-  - `categories` - optional - array - default `[ 'articles'] ` - the names of the kirby collections that can be accessed using the uri /feeds/<category>/atom|json|rss. If an empty array is specifed (`[]`) then this feature is disabled.
+- `firehose` - optional - string - default `'articles'` - the name of the kirby collection to be used for the 'firehose' feed /feeds/atom|json|rss.
+- `categories` - optional - array - default `[ 'articles'] ` - the names of the kirby collections that can be accessed using the uri `/feeds/\<category\>/atom|json|rss`. If an empty array is specifed (`[]`) then this feature is disabled.
 - `debugqueryvalue` - optional - string - the value for the query parameter `debug` to return a feed with debugging information (as comments within response). The global kirby `debug` configuration must also be true for this to work. Be aware that the debugging information will show, if applicable, details of any pages that have been excluded (so if you are using this in production and you don't want things to leak, set `debugqueryvalue` to something random). Furthermore, the site debug flag needs to be set too (i.e. the `debug` flag in `site/config.php`).
 - `author` - optional - string - default `'Staff Writer'` - the name to be used for each item in a feed when either the author is unknown or the syndication format does not allow an author name (looking at you RSS2).
 
