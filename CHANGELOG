@@ -3,6 +3,9 @@ VERSION 0  BETA RELEASE
 =======================
 
    Version 0.2 - beta release
+      22/10/2018 08:53  0.2.1  beta release
+         7c2380f Docs: edit formatting bloopers
+         aaf121f Docs: edit
       12/10/2018 09:33  0.2.0  initial release
          617395b Chore: composer update
          90e716d Docs: edit for clarity
