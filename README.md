@@ -18,7 +18,11 @@ For a kirby3 site, this plugin (_omz13/feeds_)  generates syndication feeds in R
 - A feed will have a maximum of 60 items.
 - To mitigate server load, and to return a speedy response, the generated feeds are cached in the server for a determined amount of time, c.f. `cacheTTL` in _Configuration_.
 - Supports HTTP conditional get (with strong validation): i.e. respects `If-Modified-Since` and  `If-None-Match` headers and will return a `304 Not Modified` response if appropriate (saves your bandwidth).
-- Uses the `author` field from a page to determine the author: this field can be either a structured field or a text field, but it should be the email address of the author (and will be used to map to a kirby user for their details). If an author can not be mapped to a user, a default is applied, c.f. `author` in _Configuration_.
+- The following data is derrived as follows from fields in the pages (and their use depends on the feed format used):
+  - the author(s) to be attributed is taken from the `author` field: this field can be either a structured field or a text field, but it should be the email address of the author (and will be used to map to a kirby user for their details). If an author can not be mapped to a user, a default is applied, c.f. `author` in _Configuration_.
+  - the title from `title`, a string.
+  - the modified date from, in order of preference: `updatedat`, `date`; note: if neither of these can be resolved, the the page's underlying file's modified-at attribute is used.
+  - the published date from in order of preference: `date`, `updatedat`; note: if neither of these can be resolved, the the page's underlying file's modified-at attribute is used.
 - For ATOM and JSON feeds, per author details are supplemented by their user (in order of preference) `website` or `twitter` or `instagram` data mapping to `uri`.
 - If an item has multiple authors:
   - For RSS and JSON feeds, the author will be given a concatenation of the authors' names (e.g. if the authors are Ford and Zaphod, they would be attributed as "Ford and Zaphod").
