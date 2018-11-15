@@ -112,13 +112,14 @@ If your project itself is under git, then you need to add the plugin as a submod
 
 ### Configuration
 
-There are three aspets that need configuration:
+There are four aspets that need configuration:
 
-- `config.php`
+- `site/config/config.php`
+- `content/site.txt` via blueprint (optional)
 - Feed discovery
 - Collections
 
-#### `config.php`
+#### `site/config/config.php`
 
 In your site's `site/config/config.php` the following entries prefixed with `omz13.feeds.` can be used:
 
@@ -128,6 +129,24 @@ In your site's `site/config/config.php` the following entries prefixed with `omz
 - `categories` - optional - array - default `[ 'articles' ] ` - the names of the kirby collections that can be accessed using the uri `/feeds/<category>/atom|json|rss`. If an empty array is specifed (`[]`) then this feature is disabled.
 - `debugqueryvalue` - optional - string - the value for the query parameter `debug` to return a feed with debugging information (as comments within response). The global kirby `debug` configuration must also be true for this to work. Be aware that the debugging information will show, if applicable, details of any pages that have been excluded (so if you are using this in production and you don't want things to leak, set `debugqueryvalue` to something random). Furthermore, the site debug flag needs to be set too (i.e. the `debug` flag in `site/config.php`).
 - `author` - optional - string - default `'Staff Writer'` - the name to be used for each item in a feed when either the author is unknown or the syndication format does not allow an author name (looking at you RSS2).
+
+#### `content/site.txt` (via blueprint `site/blueprints/site.yml`)
+
+The plugin can be explicitly disabled in `content/site.txt` by having an entry for `feeds` and setting this to `false`. This could be achieved through the panel by adding the following into `site/blueprints/site.yml`:
+
+```yaml
+type:          fields
+fields:
+  feeds:
+    label:     Syndication
+    type:      toggle
+    default:   off
+    text:
+      - RSS disabled
+      - RSS enabled
+```
+
+If any entry for `feeds` is not present in `content/site.txt`, it is assumed that the plugin is not be be disabled (i.e. failsafe to `false`).
 
 #### Feed discovery
 
@@ -146,6 +165,8 @@ In `site/snippets/header.php` - or equivalent - simply add:
 ```php
 <?php snippet('feeds-header') ?>
 ```
+
+If the feeds plugin is disabled, these snippets will not generate the appropriate feed-discovery links.
 
 #### Collections
 
