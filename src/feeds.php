@@ -787,9 +787,9 @@ class Feeds
     $t = kirby()->site()->content()->get( 'title' );
 
     // firehose
-    $r  = "<link rel=\"alternate\" type=\"application/atom+xml\" title=\"ATOM feed for " . $t . "\" href=\"" . kirby()->site()->url() . "/feeds/atom\" />\n";
-    $r .= "<link rel=\"alternate\" type=\"application/json\" title=\"JSON feed for " . $t . "\" href=\"" . kirby()->site()->url() . "/feeds/json\" />\n";
-    $r .= "<link rel=\"alternate\" type=\"application/rss+xml\" title=\"RSS2 feed for " . $t . "\" href=\"" . kirby()->site()->url() . "/feeds/rss\" />\n";
+    $r  = "<link rel=\"alternate\" type=\"application/atom+xml\" title=\"ATOM feed for " . $t . "\" href=\"" . kirby()->url() . "/feeds/atom\" />\n";
+    $r .= "<link rel=\"alternate\" type=\"application/json\" title=\"JSON feed for " . $t . "\" href=\"" . kirby()->url() . "/feeds/json\" />\n";
+    $r .= "<link rel=\"alternate\" type=\"application/rss+xml\" title=\"RSS2 feed for " . $t . "\" href=\"" . kirby()->url() . "/feeds/rss\" />\n";
 
     if ( $includeAll == true ) {
       $availableCats = static::getArrayConfigurationForKey( 'categories' );
@@ -797,9 +797,9 @@ class Feeds
         $r .= "<!-- no category-based feeds available -->\n";
       } else {
         foreach ( $availableCats as $category ) {
-          $r .= "<link rel=\"alternate\" type=\"application/atom+xml\" title=\"ATOM feed for " . $t . " - " . ucwords( $category ) . "\" href=\"" . kirby()->site()->url() . "/feeds/" . $category . "/atom\" />\n";
-          $r .= "<link rel=\"alternate\" type=\"application/json\" title=\"JSON feed for " . $t . " - " . ucwords( $category ) . "\" href=\"" . kirby()->site()->url() . "/feeds/" . $category . "/json\" />\n";
-          $r .= "<link rel=\"alternate\" type=\"application/rss+xml\" title=\"RSS2 feed for " . $t . " - " . ucwords( $category ) . "\" href=\"" . kirby()->site()->url() . "/feeds/" . $category . "/rss\" />\n";
+          $r .= "<link rel=\"alternate\" type=\"application/atom+xml\" title=\"ATOM feed for " . $t . " - " . ucwords( $category ) . "\" href=\"" . kirby()->url() . "/feeds/" . $category . "/atom\" />\n";
+          $r .= "<link rel=\"alternate\" type=\"application/json\" title=\"JSON feed for " . $t . " - " . ucwords( $category ) . "\" href=\"" . kirby()->url() . "/feeds/" . $category . "/json\" />\n";
+          $r .= "<link rel=\"alternate\" type=\"application/rss+xml\" title=\"RSS2 feed for " . $t . " - " . ucwords( $category ) . "\" href=\"" . kirby()->url() . "/feeds/" . $category . "/rss\" />\n";
         }
       }
     }
@@ -807,7 +807,7 @@ class Feeds
     return $r;
   }//end snippetsFeedHeader()
 
-  public function getNameOfClass() : string {
+  public static function getNameOfClass() : string {
     return static::class;
   }//end getNameOfClass()
 }//end class
