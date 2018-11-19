@@ -11,7 +11,6 @@ parameters:
 	- '#Property [a-z0-9]+\\[a-zA-Z]+::\$[a-zA-Z]+ has no typehint specified.#'
 	- '#Result of method Kirby\\Cms\\App::collection\(\) \(void\) is used.#'
 	- '#Cannot call method [a-zA-Z]+\(\) on void.#'
-	- '#Static call to instance method omz13\\Feeds::getNameOfClass\(\).#'
 	- '#Cannot access offset 1 on callable.#'
 	- '#expects callable, array#'
 	- '#Call to an undefined method Kirby\\Cms\\User::[a-z]+\(\).#'
