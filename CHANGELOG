@@ -3,6 +3,12 @@ VERSION 0  BETA RELEASE
 =======================
 
    Version 0.2 - beta release
+      19/11/2018 12:08  0.2.2  beta release
+         34bb8c0 Chore: update
+         b0371ec Fix: feeds always from base (its a multilanguage thing)
+         48a5c66 Docs: feeds option in content/site.txt via blueprint
+         01fd29c Docs: clarify page's field use; closes #1
+         a6e398a Docs: formatting fix
       22/10/2018 08:53  0.2.1  beta release
          7c2380f Docs: edit formatting bloopers
          aaf121f Docs: edit
