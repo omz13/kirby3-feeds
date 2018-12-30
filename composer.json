@@ -18,7 +18,7 @@
   ],
   "require": {
     "php": ">=7.1",
-    "getkirby/cms": "dev-master as 3.0.0",
+    "getkirby/cms": "^3.0.0-RC-3.0",
     "league/html-to-markdown": "^4.8"
   },
   "require-dev": {
@@ -48,6 +48,7 @@
     "exclude": [
       ".*",
       "makefile",
+      "kirby",
       "*.xml",
       "!/vendor/*",
       "/vendor/*/*/.*",
@@ -91,7 +92,7 @@
       "composer install --no-dev",
       "composer dumpautoload -o",
       "composer archive --format=zip --dir=dist",
-      "composer require getkirby/cms:'dev-master as 3.0.0'",
+      "composer require getkirby/cms:'^3.0.0-RC-3.0'",
       "composer dumpautoload -o"
     ]
   }
