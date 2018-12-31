@@ -742,9 +742,9 @@ class Feeds
 
   private static function getNameForKirbyUser( User $user ) : string {
     assert( $user != null );
-    $username = $user->name();
+    $username = (string) $user->name();
     if ( $username == null ) {
-      $emailParts = explode( "@", $user->email(), 2 );
+      $emailParts = explode( "@", (string) $user->email(), 2 );
       $username   = ucwords( $emailParts[0] );
     }
     return $username;
