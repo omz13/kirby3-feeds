@@ -2,7 +2,16 @@
 
  ![License](https://img.shields.io/github/license/mashape/apistatus.svg) ![Kirby Version](https://img.shields.io/badge/Kirby-3%2B-black.svg) [![Issues](https://img.shields.io/github/issues/omz13/kirby3-feeds.svg)](https://github.com/omz13/kirby3-feeds/issues)
 
-**Requirement:** [Kirby 3](https://getkirby.com/next) **BETA 6** OR BETTER; do not try to use it on earlier beta versions because it relies on features that were introduced in BETA 6.
+**Requirement:** Kirby 3.0.0-RC3 or better
+
+## Coffee, Beer, etc.
+
+This started as a simple plugin and morphed into something quite complex to cope with a combination of trying to get something sensible out of Kirby while also trying to generate something acceptable within the constraints of the different syndication formats.
+
+This plugin is free but if you use it in a commercial project to show your support you are welcome to:
+- [make a donation 🍻](https://www.paypal.me/omz13/10) or
+- [buy me ☕☕](https://buymeacoff.ee/omz13) or
+- [buy a Kirby license using this affiliate link](https://a.paddle.com/v2/click/1129/36191?link=1170)
 
 ## Documentation
 
@@ -222,9 +231,3 @@ See Kirby3's [issue #761](https://github.com/k-next/kirby/issues/761) for more a
 ## Disclaimer
 
 This plugin is provided "as is" with no guarantee. Use it at your own risk and always test it yourself before using it in a production environment. If you find any issues, please [create a new issue](https://github.com/omz13/kirby3-feeds/issues/new).
-
-## License
-
-### Buy Me A Coffee
-
-Until kirby3 has been officially released, you are free to use and evaluate this plugin on test or production servers AT YOUR OWN RISK. There is no warranty. Support is at my discretion. Did I mention that I like coffee? This started as a simple plugin and morphed into something quite complex to cope with a combination of trying to get something sensibe out of kirby while also trying to generate something acceptable within the constraints of the different syndication formats. To show your support for this project you are welcome to [buy me a coffee](https://buymeacoff.ee/omz13).
