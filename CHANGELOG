@@ -3,6 +3,13 @@ VERSION 0  BETA RELEASE
 =======================
 
    Version 0.2 - beta release
+      08/01/2019 13:01  0.2.3  beta
+         5c7f224 Chore: stan
+         7d8a879 Chore: stan
+         333dafa Chore: RC2 or better, composer update
+         2650ba1 Chore: sanity issues
+         58e0e6a Docs: Coffee, Beer, etc.
+         885fabf Chore: kirby3-rc3
       19/11/2018 12:08  0.2.2  beta release
          34bb8c0 Chore: update
          b0371ec Fix: feeds always from base (its a multilanguage thing)
