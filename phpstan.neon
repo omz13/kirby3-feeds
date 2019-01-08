@@ -14,7 +14,6 @@ parameters:
 	- '#Cannot access offset 1 on callable.#'
 	- '#expects callable, array#'
 	- '#Call to an undefined method Kirby\\Cms\\User::[a-z]+\(\).#'
-	- '#Call to method [a-z]+\(\) on an unknown class Kirby\\Cms\\Kirby\\Cache\\Cache.#'
 	tmpDir: %rootDir%/tmp
 	level: 5
 includes:
