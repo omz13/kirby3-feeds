@@ -251,7 +251,7 @@ class Feeds
 
     // echo "<!-- Getting " . $what . " for " . json_encode( $root ) . "-->\n";
 
-    $cacheTTL = static::getConfigurationForKey( 'cacheTTL' );
+    $cacheTTL = (int) static::getConfigurationForKey( 'cacheTTL' );
 
     static::$debug = $debug && kirby()->option( 'debug' ) !== null && kirby()->option( 'debug' ) == true;
 
