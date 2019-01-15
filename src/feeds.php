@@ -46,7 +46,7 @@ use function strtotime;
 use function time;
 use function ucwords;
 
-define( 'FEEDS_VERSION', '0.2.3' );
+define( 'FEEDS_VERSION', '1.0.0' );
 define( 'FEEDS_CONFIGURATION_PREFIX', 'omz13.feeds' );
 
 /**
