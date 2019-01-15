@@ -75,13 +75,9 @@ In terms of Windows clients: sorry, I have no idea as inhabit an OS X / iOS worl
 
 For a plugin that provides the methods `issunset` and `isunderembargo`, kindly see [omz13/kirby3-suncyclepages](https://github.com/omz13/kirby3-suncyclepages).
 
-#### Caveat
-
-Kirby3 is under beta, therefore this plugin, and indeed kirby3 itself, may or may not play nicely with each other, or indeed work at all: use it for testing purposes only; if you use it in production then you should be aware of the risks and know what you are doing.
-
 #### Roadmap
 
-For 1.0, the non-binding list of planned features and implementation notes are:
+The non-binding list of planned features and implementation notes are:
 
 - [x] MVP
 - [ ] Linkblogs
@@ -121,7 +117,7 @@ If your project itself is under git, then you need to add the plugin as a submod
 
 ### Configuration
 
-There are four aspets that need configuration:
+There are four aspects that need configuration:
 
 - `site/config/config.php`
 - `content/site.txt` via blueprint (optional)
@@ -161,21 +157,16 @@ If any entry for `feeds` is not present in `content/site.txt`, it is assumed tha
 
 At a minimum you need to add appropriate feed-discovery links to your site's homepage.
 
-This plugin provides two snippets to do this:
+This plugin provides two snippets to dynamically generate the necessary meta data:
 
 - `feeds-header` - to provide the links for all feeds (firehose and category-based)
 - `firehose-feeds-header` - to provide the links for the firehose feed only.
 
 Example:
 
-In `site/snippets/header.php` - or equivalent - simply add:
+In `site/snippets/header.php` - or whatever generates your `<head>` data - simply add `<?php snippet('feeds-header') ?>` in the best applicable place.
 
-
-```php
-<?php snippet('feeds-header') ?>
-```
-
-If the feeds plugin is disabled, these snippets will not generate the appropriate feed-discovery links.
+If the plugin is disabled, these snippets will not generate the appropriate feed-discovery links.
 
 #### Collections
 
