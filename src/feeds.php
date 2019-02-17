@@ -28,6 +28,7 @@ use function date;
 use function define;
 use function explode;
 use function file_exists;
+use function filectime;
 use function filemtime;
 use function get;
 use function header;
@@ -35,6 +36,7 @@ use function in_array;
 use function is_array;
 use function json_encode;
 use function kirby;
+use function max;
 use function md5;
 use function microtime;
 use function next;
@@ -372,7 +374,9 @@ class Feeds
         $whenMod = strtotime( $t );
       } else {
         if ( file_exists( $p->contentFile() ) ) {
-          $whenMod = filemtime( $p->contentFile() );
+          $mtime   = filemtime( $p->contentFile() );
+          $ctime   = filectime( $p->contentFile() );
+          $whenMod = max( $mtime, $ctime );
         }
       }
     }//end if
