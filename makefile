@@ -1,11 +1,6 @@
-.PHONY: tools build sanity zip release
+.PHONY: tools build sanity release prerelease
 
-PHPRMT := $(shell command -v ./vendor/bin/RMT 2> /dev/null)
-PHPLINT := $(shell command -v ./vendor/bin/parallel-lint 2> /dev/null)
-PHPCS := $(shell command -v ./vendor/bin/phpcs 2> /dev/null)
-PHPCBF := $(shell command -v ./vendor/bin/phpcbf 2> /dev/null)
-PHPMESS := $(shell command -v ./vendor/bin/phpmd 2> /dev/null)
-PHPSTAN := $(shell command -v ./vendor/bin/phpstan 2> /dev/null)
+THIS_FILE := $(lastword $(MAKEFILE_LIST))
 
 # the default is to do the 'sanity' checks, i.e. lint, style, mess, and stan.
 
@@ -18,33 +13,41 @@ default: tools
 # make tools checks that the necessary command line tools are available
 
 tools:
+	@echo $@  # print target name
 	@echo Checking toolchain
-ifndef PHPRMT
-	$(error "php release management tool (rmt) is not available; try composer install --dev")
+
+ifeq (,$(wildcard ${HOME}/.composer/vendor/liip/rmt/command.php))
+	$(error liip/rmt missing!)
 endif
 
-ifndef PHPLINT
-	$(error "php parallel lint (jakub-onderka/php-parallel-lint) is not available; try composer install --dev")
+ifeq (,$(wildcard ${CURDIR}/vendor/bin/parallel-lint))
+	$(error "parallel lint (jakub-onderka/php-parallel-lint) is not available; try composer install!")
+else
+	@echo We have parallel lint
 endif
 
-ifndef PHPCS
-  $(error "php code sniffer (squizlabs/php_codesniffer phpcs) is not available; try composer install --dev")
+ifeq (,$(wildcard ${CURDIR}/vendor/bin/phpcs))
+	$(error "php code sniffer (squizlabs/php_codesniffer phpcs) is not available; try composer install")
+else
+	@echo We have phpcs
 endif
 
-ifndef PHPCBF
-  $(error "php code beautifier and fixer (squizlabs/php_codesniffer phpcbf) is not available; try make install_tools")
-endif
-	@# check coding standards available
-	$(if $(shell $(PHPCS) -i | grep omz13-k3p; if [ $$? -eq 1 ] ; then exit 1 ; fi), , $(error cs omz13-k3p not available; try composer install --dev))
-	$(if $(shell $(PHPCS) -i | grep PHPCompatibility; if [ $$? -eq 1 ] ; then exit 1 ; fi), , $(error cs PHPCompatibility not available; composer install --dev))
-	$(if $(shell $(PHPCS) -i | grep SlevomatCodingStandard; if [ $$? -eq 1 ] ; then exit 1 ; fi), , $(error cs slevomat not available; try composer install --dev))
-
-ifndef PHPMESS
-	$(error "php mess tool (phpmd/phpmd) is not available; try composer install --dev")
+ifeq (,$(wildcard ${CURDIR}/vendor/bin/phpcbf))
+	$(error "php code beautifier and fixer (squizlabs/php_codesniffer phpcbf) is not available; try make install_tools")
+else
+	@echo We have code beautifier and fixer
 endif
 
-ifndef PHPSTAN
-	$(error "php static analysis tool (phpstan/phpstan) is not available; try composer install --dev")
+ifeq (,$(wildcard ${CURDIR}/vendor/bin/phpmd))
+	$(error "php mess tool (phpmd/phpmd) is not available; try composer install")
+else
+	@echo We have mess tool
+endif
+
+ifeq (,$(wildcard ${CURDIR}/vendor/bin/phpstan))
+	$(error "php static analysis tool (phpstan/phpstan) is not available; try composer install")
+else
+	@echo We have static analysis tool
 endif
 
 	@echo Toolchain is available
@@ -69,10 +72,15 @@ sanity: tools
 	composer validate
 	composer run-script sanity
 
-zip: tools
-	composer run-script zip
-
-release: tools
+prerelease:
+	composer update
 	composer normalize
+	composer run-script sanity
+	composer install --no-dev
+	composer dumpautoload -o
+
+release:
 	./RMT release
-	composer run-script zip
+
+postelease: tools
+	composer install

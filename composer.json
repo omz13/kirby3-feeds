@@ -1,5 +1,6 @@
 {
   "name": "omz13/kirby3-feeds",
+  "type": "kirby-plugin",
   "description": "kirby3 plugin to generate syndication feeds (atom, json, rss) from collections",
   "keywords": [
     "kirby3",
@@ -7,7 +8,7 @@
     "sitemap"
   ],
   "version": "1.0.0",
-  "license": "proprietary",
+  "license": "BSD-3-Clause",
   "authors": [
     {
       "name": "David Somers",
@@ -18,13 +19,13 @@
   ],
   "require": {
     "php": ">=7.1",
-    "getkirby/cms": "^3.0.0-RC-2.0",
+    "getkirby/composer-installer": "^1.1",
     "league/html-to-markdown": "^4.8"
   },
   "require-dev": {
     "dealerdirect/phpcodesniffer-composer-installer": "^0.5.0",
+    "getkirby/cms": "^3.0.1",
     "jakub-onderka/php-parallel-lint": "^1.0",
-    "liip/rmt": "^1.4",
     "localheinz/composer-normalize": "^0.8.0",
     "omz13/omz13-coding-standard": "dev-master",
     "phpcompatibility/php-compatibility": "^8.2",
@@ -40,26 +41,7 @@
   "autoload": {
     "psr-4": {
       "omz13\\": "src/"
-    },
-    "files": [
-      "src/config.php"
-    ]
-  },
-  "archive": {
-    "exclude": [
-      ".*",
-      "makefile",
-      "kirby",
-      "*.xml",
-      "!/vendor/*",
-      "/vendor/*/*/.*",
-      "/vendor/*/*/docs/*",
-      "/vendor/*/*/example/*",
-      "/vendor/*/*/examples/*",
-      "/vendor/*/*/test/*",
-      "/vendor/*/*/tests/*",
-      "/vendor/*/*/php4/*"
-    ]
+    }
   },
   "minimum-stability": "beta",
   "scripts": {
@@ -81,14 +63,6 @@
       "@mess"
     ],
     "stan": "./vendor/bin/phpstan analyse --level 7 ./src",
-    "style": "./vendor/bin/phpcs ./src/*",
-    "zip": [
-      "composer remove getkirby/cms",
-      "composer install --no-dev",
-      "composer dumpautoload -o",
-      "composer archive --format=zip --dir=dist",
-      "composer require getkirby/cms:'^3.0.0-RC-2.0'",
-      "composer dumpautoload -o"
-    ]
+    "style": "./vendor/bin/phpcs ./src/*"
   }
 }

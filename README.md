@@ -91,29 +91,13 @@ The non-binding list of planned features and implementation notes are:
 
 ### Installation
 
-#### via composer
+Pick one of the following per your epistemological model:
 
-If your kirby3-based site is managed using-composer, simply invoke `composer require --no-dev omz13/kirby3-feeds`, or add `omz13/kirby3-feeds` to the "require" component of your site's `composer.json` as necessary, e.g. to be on the bleeding-edge:
+- `composer require --no-dev omz13/kirby3-feeds`; the plugin will automagically appear in `site/plugins`.
+- Download a zip of the latest release - [master.zip](https://github.com/omz13/kirby3-feeds/archive/master.zip) - and copy the contents to your `site/plugins/kirby3-feeds`.
+- `git submodule add https://github.com/omz13/kirby3-feeds.git site/plugins/kirby3-feeds`.
 
-```yaml
-"require": {
-  ...
-  "omz13/kirby3-feeds": "@dev",
-  ...
-}
-```
-
-#### via git
-
-Clone github.com/omz13/kirby3-feeds into your `site/plugins` and then in `site/plugins/kirby3-feeds` invoke ``composer update --no-dev`` to generate the `vendor` folder and the magic within.
-
-```sh
-$ git clone github.com/omz13/kirby3-feeds site/plugins/kirby3-feeds
-$ cd site/plugins/kirby3-feeds
-$ composer update --no-dev
-```
-
-If your project itself is under git, then you need to add the plugin as a submodule and possibly automate the composer update; it is assumed if you are doing this that you know what to do.
+For the record: installation by composer is cool; supporting installation by zip and submodule was an absolute pain, especially as I am an installation by composer person, so do feel guilted into getting me Coffee, Beer, etc., because this is for _your_ benefit and _not mine_ (and yes, I would have have preferred to spend my time somewhere warm and sunny instead of being hunched over a keyboard while the snow falls outside and the thermometer shows no inclination to get above 0C).
 
 ### Configuration
 
