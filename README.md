@@ -93,7 +93,7 @@ The non-binding list of planned features and implementation notes are:
 
 Pick one of the following per your epistemological model:
 
-- `composer require --no-dev omz13/kirby3-feeds`; the plugin will automagically appear in `site/plugins`.
+- `composer require omz13/kirby3-feeds`; the plugin will automagically appear in `site/plugins`.
 - Download a zip of the latest release - [master.zip](https://github.com/omz13/kirby3-feeds/archive/master.zip) - and copy the contents to your `site/plugins/kirby3-feeds`.
 - `git submodule add https://github.com/omz13/kirby3-feeds.git site/plugins/kirby3-feeds`.
 
