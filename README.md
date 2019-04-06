@@ -183,7 +183,7 @@ For example, for the [Kirby Starter Kit](https://github.com/k-next/starterkit), 
 
 return [
   'omz13.feeds.cacheTTL' => 60,
-  'omz13.feeds.firehose' => [ 'articles' ],
+  'omz13.feeds.firehose' => 'articles',
   ],
 ];
 ```
@@ -196,7 +196,7 @@ _For experimental purposes this plugin implements a single-level pseudo-namespac
 return [
   'omz13.feeds' => [
     'cacheTTL' => 60,
-    'firehose' => [ 'articles' ],
+    'firehose' => 'articles',
   ],
 ];
 ```
