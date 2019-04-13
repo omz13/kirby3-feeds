@@ -177,11 +177,10 @@ class Feeds
     }//end if
 
     if ( kirby()->collections()->has( $category ) == false ) {
-      header( 'HTTP/1.0 500' );
       return new Response(
           'Oops. Syndication feed configuration error - collection \'' . $category . '\' not found but needed for ' . ( $firehose ? "firehose" : "category-based" ) . " feed." ,
           null,
-          404
+          500
       );
     }
 
