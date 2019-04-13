@@ -146,9 +146,13 @@ This plugin provides two snippets to dynamically generate the necessary meta dat
 - `feeds-header` - to provide the links for all feeds (firehose and category-based)
 - `firehose-feeds-header` - to provide the links for the firehose feed only.
 
+Or for those who prefer to use pageMethods, the equivalent to the above are:
+- `headFeeds`
+- `headFirehoseFeeds`
+
 Example:
 
-In `site/snippets/header.php` - or whatever generates your `<head>` data - simply add `<?php snippet('feeds-header') ?>` in the best applicable place.
+In `site/snippets/header.php` - or whatever generates your `<head>` data - simply add `<?php snippet('feeds-header') ?>` or `<?= $page->headFeeds() ?>` in the best applicable place.
 
 If the plugin is disabled, these snippets will not generate the appropriate feed-discovery links.
 
