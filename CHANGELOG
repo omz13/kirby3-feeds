@@ -2,6 +2,14 @@
 VERSION 1  RELEASE
 ==================
 
+   Version 1.2 - Release
+      15/04/2019 17:52  1.2.0  initial release
+         026ca9f Chore: composer update and stan
+         dfaff5f Feat: pageMethods for feed discovery
+         efdbda2 Refactor
+         d9ed043 Fix #2
+         fc89367 Docs: get composer install right
+
    Version 1.1 - Install by Zip or Submodule
       20/02/2019 21:23  1.1.0  initial release
          c78d7f0 Chore: composer update
